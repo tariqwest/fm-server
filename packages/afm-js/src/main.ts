@@ -5,6 +5,8 @@
 // ============================================================================
 
 import { defineCommand, runMain } from "citty";
+import { autostartCommand } from "./commands/autostart.js";
+import { benchmarkCommand } from "./commands/benchmark.js";
 import { chatCommand } from "./commands/chat.js";
 import { promptCommand } from "./commands/prompt.js";
 import { serveCommand } from "./commands/serve.js";
@@ -20,6 +22,8 @@ const main = defineCommand({
     serve: serveCommand,
     prompt: promptCommand,
     chat: chatCommand,
+    autostart: autostartCommand,
+    benchmark: benchmarkCommand,
   },
 });
 

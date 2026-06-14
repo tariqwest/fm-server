@@ -11,6 +11,7 @@ import {
   ChatRequestValidator,
   FinishReason,
   FinishReasonResolver,
+  JSONFenceStripper,
   ModelBackend,
   ToolCallHandler,
   ToolResolution,
@@ -187,6 +188,7 @@ export function createApp(config: AppConfig): Hono {
         messages: request.messages,
         tools: effectiveTools,
         injectToolInstructions: effectiveTools != null && effectiveTools.length > 0,
+        responseFormat: request.response_format,
       });
     } catch (err) {
       return c.json(
@@ -220,6 +222,13 @@ export function createApp(config: AppConfig): Hono {
     const requestId = `chatcmpl-${cryptoRandomId()}`;
     const created = Math.floor(Date.now() / 1000);
     const modelName = ModelBackend.canonicalModelID(backend);
+    // When the client asked for JSON output, strip any markdown fences off
+    // the model's response. Apple's on-device model sometimes wraps JSON in
+    // ```json ... ``` despite our explicit instructions otherwise.
+    const wantsJson =
+      request.response_format?.type === "json_object" ||
+      request.response_format?.type === "json_schema";
+    const cleanContent = (raw: string): string => (wantsJson ? JSONFenceStripper.strip(raw) : raw);
 
     // MARK: - Streaming branch
     if (request.stream) {
@@ -366,7 +375,7 @@ export function createApp(config: AppConfig): Hono {
           choices: [
             {
               index: 0,
-              message: { role: "assistant", content: followup.content },
+              message: { role: "assistant", content: cleanContent(followup.content) },
               finish_reason: followup.finishReason,
               logprobs: null,
             },
@@ -424,7 +433,7 @@ export function createApp(config: AppConfig): Hono {
         choices: [
           {
             index: 0,
-            message: { role: "assistant", content: result.content },
+            message: { role: "assistant", content: cleanContent(result.content) },
             finish_reason: result.finishReason,
             logprobs: null,
           },

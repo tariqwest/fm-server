@@ -1,4 +1,5 @@
 // @afm-js/core public surface.
+export * from "./autostart/AutostartPlist.js";
 export * from "./backend/ModelBackend.js";
 export * from "./backend/ModelAvailability.js";
 export * from "./chat/FinishReasonResolver.js";

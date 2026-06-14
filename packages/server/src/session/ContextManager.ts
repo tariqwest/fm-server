@@ -18,6 +18,7 @@ import {
   type ContextConfig,
   type OpenAIMessage,
   type OpenAITool,
+  type ResponseFormat,
   ToolCallHandler,
   messageText,
 } from "@afm-js/core";
@@ -27,6 +28,14 @@ export interface MakeSessionInput {
   tools?: OpenAITool[] | null;
   /** When true, tool-output instructions are injected into the system prompt. */
   injectToolInstructions?: boolean;
+  /**
+   * If set, append a JSON-output contract to the instructions. M3 implements
+   * structured outputs by prompt-engineering the schema into the system
+   * message and post-processing with JSONFenceStripper. The full native
+   * GenerationSchema path will land when the helper exposes a respondWithSchema
+   * op (planned for M4).
+   */
+  responseFormat?: ResponseFormat;
   /** Reserved for future use; passed straight through for now. */
   context?: ContextConfig;
 }
@@ -94,6 +103,10 @@ export function makeContext(input: MakeSessionInput): PreparedSession {
     const fallback = ToolCallHandler.buildFallbackPrompt(defs);
     if (fallback) parts.push(fallback);
   }
+  if (input.responseFormat) {
+    const json = renderResponseFormatPrompt(input.responseFormat);
+    if (json) parts.push(json);
+  }
   if (history.length > 0) {
     parts.push("Conversation so far:");
     for (const m of history) {
@@ -132,6 +145,39 @@ export function makeContext(input: MakeSessionInput): PreparedSession {
   }
 
   return { instructions, finalPrompt, historyCount: history.length };
+}
+
+function renderResponseFormatPrompt(format: ResponseFormat): string {
+  switch (format.type) {
+    case "text":
+      return "";
+    case "json_object":
+      return [
+        "## Response format",
+        "You must respond with valid JSON only.",
+        "No markdown code fences, no explanation text, no preamble.",
+        "Output raw JSON.",
+      ].join("\n");
+    case "json_schema": {
+      const schemaText = format.json_schema.schema
+        ? JSON.stringify(format.json_schema.schema, null, 2)
+        : "(no schema provided)";
+      const lines = [
+        "## Response format",
+        "You must respond with raw JSON that conforms strictly to this JSON Schema.",
+        "No markdown code fences, no explanation text.",
+      ];
+      if (format.json_schema.name) {
+        lines.push(`Schema name: ${format.json_schema.name}`);
+      }
+      if (format.json_schema.description) {
+        lines.push(`Schema description: ${format.json_schema.description}`);
+      }
+      lines.push("Schema:");
+      lines.push(schemaText);
+      return lines.join("\n");
+    }
+  }
 }
 
 function pickValidationError(input: MakeSessionInput): string | null {
