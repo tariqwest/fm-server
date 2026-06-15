@@ -1,8 +1,10 @@
 # afm-js
 
-Apple Foundation Models for Node.js. OpenAI-compatible HTTP server and CLI for Apple Intelligence on macOS. Reaches the on-device `SystemLanguageModel` (and, on macOS 27+, `PrivateCloudComputeLanguageModel`) via apple's FM client if available, and a small Swift helper binary if not.
+Apple Foundation Models for Node.js. OpenAI-compatible HTTP server and CLI for Apple Intelligence on macOS. Reaches the on-device `SystemLanguageModel` (and, on macOS 27+, `PrivateCloudComputeLanguageModel`) via Apple's FM client if available, and a small Swift helper binary if not.
 
-LaunchAgent auto-start via Homebrew services. Install via Homebrew for prebuilt binaries, or build from source with `pnpm install && (cd helper && swift build -c release)`.
+Provides both a CLI matching Apple's `/usr/bin/fm` semantics and a standalone SDK (`@afm-js/core`) for programmatic use.
+
+LaunchAgent auto-start via Homebrew services. Install via Homebrew for prebuilt binaries, or build from source.
 
 ## Architecture
 
@@ -71,11 +73,16 @@ node packages/afm-js/dist/main.js serve --port 11434
 ```
 afm-js/
 ├── packages/
-│   ├── core/        @afm-js/core     modeled afer Apple's own  Zod schemas, AfmError, validators, ModelBackend
+│   ├── core/        @afm-js/core     SDK modeled after Apple's Python SDK
+│   │   ├── src/sdk/                 LanguageModel, LanguageModelSession, AfmClient
+│   │   ├── src/bridge/              HelperProcess, UnifiedBackend
+│   │   └── examples/                SDK usage examples
 │   ├── cli/         @afm-js/cli      argv -> typed config
-│   ├── server/      @afm-js/server   Hono + HelperProcess bridge
-│   └── afm-js/      afm-js           umbrella, the npm bin
-└── helper/                           Swift sources for afm-fm-helper
+│   ├── server/      @afm-js/server   Hono HTTP server + Session management
+│   └── afm-js/      afm-js           CLI entry point, aggregates all packages
+└── helper/                           Swift helper binary (afm-fm-helper)
+    └── Sources/
+        └── afm-fm-helper/           Swift FoundationModels bridge
 ```
 
 ## Build (dev)
@@ -130,18 +137,50 @@ afm-js serve --port 11434 --mcp "python3 /path/to/mcp/server.py"
 node packages/afm-js/bin/afm-js.js serve --port 11434 --mcp "python3 /path/to/mcp/server.py"
 ```
 
-## CLI commands
+## CLI Commands
+
+The afm-js CLI mirrors Apple's `/usr/bin/fm` interface:
 
 ```bash
+# Generate a response (one-shot)
+afm-js respond "Your prompt here"
+afm-js respond --model pcc "Use Private Cloud Compute"
+afm-js respond --stream "Stream the response as it's generated"
+afm-js respond --json "Emit JSON envelope"
+echo "What is 2+2?" | afm-js respond     # reads from stdin
+
+# Interactive chat REPL
+afm-js chat                              # start interactive session
+afm-js chat --instructions "Be brief."  # with system instructions
+afm-js chat --model pcc                 # use PCC
+
+# Utility commands
+afm-js token-count "Hello world"        # count tokens without generating
+afm-js available                        # check if FM is available
+afm-js quota-usage                    # check PCC quota
+afm-js schema object --name Person --string name --int age  # generate JSON schema
+
+# HTTP server
 afm-js serve [--port N --host H --token T --mcp "<cmd ...>" --debug]
-afm-js prompt "Your prompt here"         # one-shot, prints answer
-afm-js prompt --json "..."               # one-shot, JSON envelope
-echo "What is 2+2?" | afm-js prompt      # reads from stdin
-afm-js chat                              # multi-turn REPL with streaming
-afm-js chat --system "Be brief."         # …with a system prompt
-afm-js prompt --pcc "..."                # route to Private Cloud Compute
-afm-js benchmark                         # ttft + tokens/s over 3 fixed prompts
-afm-js benchmark --json                  # machine-readable report
+```
+
+### CLI Examples
+
+```bash
+# Simple response
+afm-js respond "What is Swift?"
+
+# Streaming with PCC
+afm-js respond --model pcc --stream "Summarize this article"
+
+# Chat with instructions
+afm-js chat --instructions "You are a coding assistant"
+
+# Check availability
+afm-js available
+
+# Token count for budgeting
+afm-js token-count "This is a test prompt" --instructions "You are helpful"
 ```
 
 ## Structured outputs
@@ -195,6 +234,86 @@ The service runs on port 11434 by default. Logs are stored at:
 
 A LaunchAgent (not Daemon) because Apple Intelligence is only reachable
 from the logged-in user's GUI session.
+
+## SDK Usage (@afm-js/core)
+
+Use the SDK directly in your Node.js applications for programmatic access to Apple Foundation Models.
+
+### Simple Inference
+
+```typescript
+import * as fm from "@afm-js/core";
+
+async function main() {
+  // Get the default system foundation model
+  const model = new fm.SystemLanguageModel();
+
+  // Check if the model is available
+  const [isAvailable, reason] = await model.isAvailable();
+  if (!isAvailable) {
+    console.log(`Foundation Models not available: ${reason}`);
+    return;
+  }
+
+  // Create a session with instructions
+  const session = new fm.LanguageModelSession({
+    instructions: "You are a helpful assistant.",
+  });
+
+  // Generate a response
+  const response = await session.respond("Hello, how are you?");
+  console.log(`Assistant: ${response.content}`);
+  console.log(`Usage: ${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion tokens`);
+
+  // Cleanup
+  await session.shutdown();
+  await model.shutdown();
+}
+```
+
+### Streaming Responses
+
+```typescript
+import * as fm from "@afm-js/core";
+
+async function main() {
+  const model = new fm.SystemLanguageModel();
+  const [isAvailable] = await model.isAvailable();
+  if (!isAvailable) return;
+
+  const session = new fm.LanguageModelSession({
+    instructions: "You are a helpful assistant.",
+  });
+
+  // Stream a response
+  const prompt = "Tell me a short story about a cat.";
+  process.stdout.write("Assistant: ");
+
+  for await (const chunk of session.streamResponse(prompt)) {
+    process.stdout.write(chunk.text);
+
+    if (chunk.isFinal && chunk.usage) {
+      console.log(`\n(Finish reason: ${chunk.finishReason}, ${chunk.usage.totalTokens} total tokens)`);
+    }
+  }
+
+  await session.shutdown();
+  await model.shutdown();
+}
+```
+
+### SDK Examples
+
+See `packages/core/examples/` for complete working examples:
+- `simple_inference.ts` — Basic non-streaming inference
+- `streaming_example.ts` — Streaming response handling
+- `transcript_processing.ts` — Processing transcripts from Swift apps
+
+Run examples:
+```bash
+cd packages/core
+npx ts-node examples/simple_inference.ts
+```
 
 ## Models
 
