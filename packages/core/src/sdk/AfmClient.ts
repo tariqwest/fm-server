@@ -12,7 +12,7 @@
 //   const response = await client.generate({ prompt: "Hello!" });
 // ============================================================================
 
-import { UnifiedBackend, HelperProcess, type HelperStreamFrame } from "../bridge/index.js";
+import { UnifiedBackend, HelperProcessManager, type HelperStreamFrame } from "../bridge/index.js";
 import { FmProcessManager } from "../fm/FmProcessManager.js";
 import { type AfmError } from "../errors/AfmError.js";
 
@@ -241,7 +241,7 @@ export class AfmClient {
         this.backend = new UnifiedBackend({
           kind: "fm",
           fmClient: client,
-          fmProcessManager: manager,
+          processManager: manager,
           debug: this.debug,
         });
         this.debug("FM CLI backend initialized");
@@ -266,8 +266,8 @@ export class AfmClient {
       }
 
       this.debug(`Using helper backend at ${helperPath}`);
-      const helper = new HelperProcess({ binaryPath: helperPath, debug: this.debug });
-      this.backend = UnifiedBackend.createHelper(helper, this.debug);
+      const helperManager = new HelperProcessManager(helperPath, undefined, this.debug);
+      this.backend = await UnifiedBackend.createHelper(helperManager, this.debug);
       return;
     }
 

@@ -14,39 +14,39 @@ Provides both a CLI matching Apple's `fm` terminal client semantics and a standa
 │                                                                      │
 │  ┌──────────────────────────────────────────────────────────────┐   │
 │  │  @afm-js/server (Hono + Node)                                │   │
-│  │  /v1/chat/completions  /v1/models  /health  /v1/logs         │   │
+│  │  /v1/chat/completions  /v1/models  /health                   │   │
 │  └──────────────────────────┬───────────────────────────────────┘   │
 │                             │                                        │
 │                   UnifiedBackend (auto-selects)                      │
+│                   FmSocketClient ← same protocol for both            │
 │                   ┌─────────┴──────────┐                            │
 │                   │                    │                             │
 │                   ▼                    ▼                             │
 │  ┌─────────────────────┐  ┌────────────────────────────┐            │
-│  │  HelperProcess      │  │  FM Client backend         │            │
+│  │  HelperProcessMgr   │  │  FmProcessManager          │            │
 │  │  (backend A)        │  │  (backend B)               │            │
 │  │                     │  │                            │            │
-│  │  newline-JSON over  │  │  unix socket / IPC to      │            │
-│  │  stdin/stdout;      │  │  Apple's fm daemon         │            │
-│  │  multiplexes        │  │  (/usr/bin/fm)             │            │
-│  │  sessions           │  │                            │            │
+│  │  HTTP/1.1 over      │  │  HTTP/1.1 over             │            │
+│  │  Unix socket        │  │  Unix socket               │            │
 │  └──────────┬──────────┘  └──────────────┬─────────────┘            │
 └─────────────┼──────────────────────────── ┼────────────────────────┘
               ▼                             ▼
 ┌─────────────────────────┐   ┌─────────────────────────────────────┐
 │  afm-fm-helper          │   │  Apple fm daemon (system)           │
-│  (Swift, macOS 26+)     │   │  /usr/bin/fm                        │
+│  (Swift, macOS 26+)     │   │  /usr/bin/fm serve --socket         │
 │                         │   │                                     │
-│  FoundationModels API:  │   │  FoundationModels API:              │
-│    SystemLanguageModel  │   │    SystemLanguageModel              │
-│    LanguageModelSession │   │    PrivateCloudComputeLanguageModel │
-│                         │   │    LanguageModelSession             │
-│  ⚠ on-device only;      │   │                                     │
-│    PCC requires Apple   │   │  ✓ supports PCC (system-signed)    │
+│  serve --socket <path>  │   │  FoundationModels API:              │
+│  FoundationModels API:  │   │    SystemLanguageModel              │
+│    SystemLanguageModel  │   │    PrivateCloudComputeLanguageModel │
+│    LanguageModelSession │   │    LanguageModelSession             │
+│                         │   │                                     │
+│  ⚠ on-device only;      │   │  ✓ supports PCC (system-signed)    │
+│    PCC requires Apple   │   │                                     │
 │    dev entitlement      │   │                                     │
 └─────────────────────────┘   └─────────────────────────────────────┘
 ```
 
-**Swift Helper:** `afm-fm-helper` is a backend implementing the apple-approved way to use `FoundationModels` in 3rd party apps. It ships as a prebuilt arm64 binary that is spawned by Node and multiplexes requests over a tiny JSON protocol. As of today (2026/6/15), it will not work with PCC as the binary needs to be signed by an apple developer ID with a specific PCC entitlement. This will be updated once Apple approves the necessary entitlements for my apple developer ID.
+**Swift Helper:** `afm-fm-helper` is a backend implementing the Apple-approved way to use `FoundationModels` in 3rd party apps. It is spawned by Node as `afm-fm-helper serve --socket <path>` and serves an OpenAI-compatible HTTP/1.1 API over a Unix domain socket — the same transport used by `/usr/bin/fm`. Both backends are therefore accessed identically by `UnifiedBackend` via `FmSocketClient`. As of today (2026/6/15), it will not work with PCC as the binary needs to be signed by an Apple developer ID with a specific PCC entitlement. This will be updated once Apple approves the necessary entitlements.
 
 ## Installation
 

@@ -7,8 +7,8 @@
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HelperProcess, UnifiedBackend, selectBackend } from "@afm-js/server";
-import { FmSocketClient, FmProcessManager } from "@afm-js/core";
+import { selectBackend } from "@afm-js/server";
+import { FmSocketClient, FmProcessManager, HelperProcessManager, UnifiedBackend } from "@afm-js/core";
 
 export interface BackendHandle {
   backend: UnifiedBackend;
@@ -30,13 +30,9 @@ export async function createBackend(helperOverride?: string): Promise<BackendHan
       process.stderr.write(`afm-js: helper binary not found: ${explicitHelper}\n`);
       process.exit(1);
     }
-    const helper = new HelperProcess({ binaryPath: explicitHelper });
-    helper.start();
-    const backend = UnifiedBackend.createHelper(helper);
-    return {
-      backend,
-      shutdown: () => backend.shutdown(),
-    };
+    const manager = new HelperProcessManager(explicitHelper);
+    const backend = await UnifiedBackend.createHelper(manager);
+    return { backend, shutdown: () => backend.shutdown() };
   }
 
   // Auto-detect
@@ -53,14 +49,22 @@ export async function createBackend(helperOverride?: string): Promise<BackendHan
   }
 
   if (detected.kind === "fm") {
-    const fm = detected.process;
-    const client = new FmSocketClient(fm.socketPath);
+    const client = new FmSocketClient(detected.process.socketPath);
     await client.connect();
-    const manager = new FmProcessManager(fm.socketPath);
-    const backend = new UnifiedBackend({ kind: "fm", fmClient: client, fmProcessManager: manager });
+    const backend = new UnifiedBackend({
+      kind: "fm",
+      fmClient: client,
+      processManager: new FmProcessManager(detected.process.socketPath),
+    });
     return { backend, shutdown: () => backend.shutdown() };
   } else {
-    const backend = UnifiedBackend.createHelper(detected.helper);
+    const client = new FmSocketClient(detected.socketPath);
+    await client.connect();
+    const backend = new UnifiedBackend({
+      kind: "helper",
+      fmClient: client,
+      processManager: detected.manager,
+    });
     return { backend, shutdown: () => backend.shutdown() };
   }
 }

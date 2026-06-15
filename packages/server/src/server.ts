@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { serve, type ServerType } from "@hono/node-server";
-import { HelperProcess, UnifiedBackend } from "@afm-js/core";
+import { HelperProcessManager, UnifiedBackend, FmSocketClient, FmProcessManager } from "@afm-js/core";
 import type { BackendSelectorOptions, Backend } from "./bridge/BackendSelector.js";
 import { createApp } from "./app.js";
 import { selectBackend } from "./bridge/BackendSelector.js";
@@ -80,23 +80,14 @@ export async function startServer(opts: StartOptions): Promise<RunningServer> {
 }
 
 async function createBackend(opts: StartOptions, debug: (msg: string) => void): Promise<UnifiedBackend> {
-  // If explicit helper path provided and no backend options specified, use helper directly
+  // Explicit helper path bypasses auto-detection
   if (opts.helperBinaryPath && !opts.backend?.force) {
-    // Legacy path: use HelperProcess wrapped in UnifiedBackend
-    const helperProcess = new HelperProcess({ binaryPath: opts.helperBinaryPath, debug });
-    helperProcess.start();
-    return UnifiedBackend.createHelper(helperProcess, debug);
+    const manager = new HelperProcessManager(opts.helperBinaryPath, undefined, debug);
+    return UnifiedBackend.createHelper(manager, debug);
   }
 
-  // Otherwise use auto-detection
   const selectorOptions: BackendSelectorOptions = opts.backend ?? {};
-  
-  // If helper path specified, use it in selector
-  if (opts.helperBinaryPath) {
-    selectorOptions.helperPath = opts.helperBinaryPath;
-  }
-  
-  // Pass debug callback for helper process logging
+  if (opts.helperBinaryPath) selectorOptions.helperPath = opts.helperBinaryPath;
   selectorOptions.debug = debug;
 
   debug("Auto-detecting backend (fm CLI preferred on macOS 27+)...");
@@ -104,17 +95,22 @@ async function createBackend(opts: StartOptions, debug: (msg: string) => void): 
   debug(`Detected backend: ${detected.kind}`);
 
   if (detected.kind === "fm") {
-    const fm = detected.process;
-    const client = new (await import("@afm-js/core")).FmSocketClient(fm.socketPath);
+    const client = new FmSocketClient(detected.process.socketPath);
     await client.connect();
     return new UnifiedBackend({
       kind: "fm",
       fmClient: client,
-      fmProcessManager: new (await import("@afm-js/core")).FmProcessManager(fm.socketPath),
+      processManager: new FmProcessManager(detected.process.socketPath),
       debug,
     });
   } else {
-    // Helper backend - use the HelperProcess directly
-    return UnifiedBackend.createHelper(detected.helper, debug);
+    const client = new FmSocketClient(detected.socketPath);
+    await client.connect();
+    return new UnifiedBackend({
+      kind: "helper",
+      fmClient: client,
+      processManager: detected.manager,
+      debug,
+    });
   }
 }

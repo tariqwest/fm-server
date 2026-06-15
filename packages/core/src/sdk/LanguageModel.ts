@@ -13,7 +13,7 @@
 //   const response = await session.respond("Hello!");
 // ============================================================================
 
-import { UnifiedBackend, HelperProcess } from "../bridge/index.js";
+import { UnifiedBackend, HelperProcessManager } from "../bridge/index.js";
 import { FmProcessManager } from "../fm/FmProcessManager.js";
 import { AfmError } from "../errors/AfmError.js";
 
@@ -148,7 +148,7 @@ export class SystemLanguageModel {
       this.backend = new UnifiedBackend({
         kind: "fm",
         fmClient: client,
-        fmProcessManager: manager,
+        processManager: manager,
         debug: this.debug,
       });
       this.debug("FM CLI backend initialized");
@@ -167,8 +167,8 @@ export class SystemLanguageModel {
     }
 
     this.debug(`Using helper backend at ${helperPath}`);
-    const helper = new HelperProcess({ binaryPath: helperPath, debug: this.debug });
-    this.backend = UnifiedBackend.createHelper(helper, this.debug);
+    const helperManager = new HelperProcessManager(helperPath, undefined, this.debug);
+    this.backend = await UnifiedBackend.createHelper(helperManager, this.debug);
   }
 
   private findHelperPath(): string | undefined {
@@ -243,7 +243,7 @@ export class LanguageModelSession {
         this.backend = new UnifiedBackend({
           kind: "fm",
           fmClient: client,
-          fmProcessManager: manager,
+          processManager: manager,
           debug: this.debug,
         });
         return;
@@ -254,8 +254,8 @@ export class LanguageModelSession {
 
     // Fall back to helper
     if (options.helperPath) {
-      const helper = new HelperProcess({ binaryPath: options.helperPath, debug: this.debug });
-      this.backend = UnifiedBackend.createHelper(helper, this.debug);
+      const helperManager = new HelperProcessManager(options.helperPath, undefined, this.debug);
+      this.backend = await UnifiedBackend.createHelper(helperManager, this.debug);
     }
   }
 
@@ -397,7 +397,7 @@ export class LanguageModelSession {
       this.backend = new UnifiedBackend({
         kind: "fm",
         fmClient: client,
-        fmProcessManager: manager,
+        processManager: manager,
         debug: this.debug,
       });
       this.debug("FM CLI backend initialized");
@@ -416,8 +416,8 @@ export class LanguageModelSession {
     }
 
     this.debug(`Using helper backend at ${helperPath}`);
-    const helper = new HelperProcess({ binaryPath: helperPath, debug: this.debug });
-    this.backend = UnifiedBackend.createHelper(helper, this.debug);
+    const helperManager = new HelperProcessManager(helperPath, undefined, this.debug);
+    this.backend = await UnifiedBackend.createHelper(helperManager, this.debug);
   }
 
   private findHelperPath(): string | undefined {

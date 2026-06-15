@@ -4,7 +4,7 @@
 // to helper-based JSON IPC.
 // ============================================================================
 
-import { FmProcessManager, HelperProcess, type FmProcess } from "@afm-js/core";
+import { FmProcessManager, HelperProcessManager, type FmProcess, type HelperProcessHandle } from "@afm-js/core";
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
 import { join, dirname } from "node:path";
@@ -19,7 +19,8 @@ export interface FmBackend {
 
 export interface HelperBackend {
   kind: "helper";
-  helper: HelperProcess;
+  manager: HelperProcessManager;
+  socketPath: string;
 }
 
 export type Backend = FmBackend | HelperBackend;
@@ -119,17 +120,13 @@ async function spawnHelper(helperPath?: string, debug?: (msg: string) => void): 
     );
   }
 
-  const helper = new HelperProcess({ binaryPath, debug });
-  
-  // start() spawns the process and sets up error handlers
-  helper.start();
-
-  // Give a brief moment for immediate spawn failures
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  const manager = new HelperProcessManager(binaryPath, undefined, debug);
+  const proc = await manager.spawn();
 
   return {
     kind: "helper",
-    helper,
+    manager,
+    socketPath: proc.socketPath,
   };
 }
 

@@ -1,9 +1,8 @@
 // ============================================================================
 // Bridge module — Backend implementations for accessing Apple Foundation Models
 //
-// Provides two backend options:
-// - HelperProcess: Direct integration via afm-fm-helper binary (stdin/stdout)
-// - UnifiedBackend: Abstraction that supports both FM CLI and helper backends
+// Both backends (afm-fm-helper and /usr/bin/fm) now speak HTTP/1.1 over a
+// Unix domain socket. UnifiedBackend wraps FmSocketClient for both.
 // ============================================================================
 
 export {
@@ -26,3 +25,8 @@ export {
   type BackendKind,
   type UnifiedBackendOptions,
 } from "./UnifiedBackend.js";
+
+export {
+  HelperProcessManager,
+  type HelperProcess as HelperProcessHandle,
+} from "./HelperProcessManager.js";
