@@ -152,7 +152,7 @@ node packages/afm-js/bin/afm-js.js serve --port 11434 --mcp "python3 /path/to/mc
 
 The afm-js CLI mirrors Apple's `fm` client interface:
 
-### respond
+### respond ✓ both backends
 
 Generate a one-shot response. Prompt can be a positional argument or piped via stdin.
 
@@ -169,7 +169,7 @@ echo "What is 2+2?" | afm-js respond     # reads from stdin
 
 Flags: `--model system|pcc` · `--stream` · `--instructions TEXT` · `--json` · `--temperature 0-1` · `--max-tokens N` · `--seed N` · `--helper PATH`
 
-### chat
+### chat ✓ both backends
 
 Interactive multi-turn REPL. Always streams responses. Requires a TTY. Exit with Ctrl-D.
 
@@ -181,9 +181,11 @@ afm-js chat --model pcc
 
 Flags: `--model system|pcc` · `--instructions TEXT` · `--helper PATH`
 
-### token-count
+### token-count ✓ both backends
 
 Count tokens without generating a response. Outputs total token count to stdout; use `--json` for a breakdown.
+
+> **Note:** Implemented by running a minimal generation (`max_tokens=1`) and reading `promptTokens` from the response usage. The generated token is discarded.
 
 ```bash
 afm-js token-count "This is a test prompt"
@@ -193,7 +195,7 @@ afm-js token-count --json "Hello world"  # => {prompt_tokens, instructions_token
 
 Flags: `--instructions TEXT` · `--json` · `--helper PATH`
 
-### available
+### available ✓ both backends
 
 Check if Foundation Models are available on this device. Exits 0 if available, 1 if not (scriptable).
 
@@ -204,18 +206,18 @@ afm-js available --json   # => {available: true|false, status: "available"|...}
 
 Status values: `available` · `appleIntelligenceNotEnabled` · `deviceNotEligible` · `modelNotReady`
 
-### quota-usage
+### quota-usage ⚠ FM Client backend only
 
-Check PCC quota usage.
+Check PCC quota usage. Requires the FM Client backend (`/usr/bin/fm` on macOS 27+). Prints a descriptive message when run against the helper backend.
 
 ```bash
 afm-js quota-usage
 afm-js quota-usage --json  # => {used, limit, remaining}
 ```
 
-### schema
+### schema ✓ no backend required
 
-Generate a JSON schema for use with structured output. Fields of the same type can be comma-separated.
+Generate a JSON schema for use with structured output. Runs locally — no model connection needed. Fields of the same type can be comma-separated.
 
 ```bash
 afm-js schema object --name Person --string name --int age
@@ -225,7 +227,7 @@ afm-js schema object --name Event --string title --string "location:where it hap
 
 Flags: `--name TEXT` · `--description TEXT` · `--string FIELD[,FIELD...]` · `--int FIELD[,FIELD...]` · `--number FIELD[,FIELD...]` · `--bool FIELD[,FIELD...]` · `--json`
 
-### serve
+### serve ✓ both backends
 
 Start the OpenAI-compatible HTTP server.
 
@@ -238,9 +240,13 @@ afm-js serve --helper /path/to/afm-fm-helper           # override binary path
 
 Flags: `--port N` (default 11434) · `--host ADDR` (default 127.0.0.1) · `--token SECRET` · `--debug` · `--mcp "CMD ARGS"` · `--helper PATH`
 
-### Common options
+### Backend auto-selection
 
-All commands that communicate with the model accept `--helper PATH` to override the `afm-fm-helper` binary. You can also set `AFM_HELPER_PATH` in the environment instead.
+All commands auto-select the best available backend at startup:
+- **FM Client** (`/usr/bin/fm`) — preferred when present (macOS 27+). Supports PCC.
+- **afm-fm-helper** — fallback Swift binary. On-device only (PCC requires a pending Apple entitlement).
+
+Force the helper with `--helper PATH` or `AFM_HELPER_PATH=...`. The `schema` command requires no backend.
 
 ## Structured outputs
 
