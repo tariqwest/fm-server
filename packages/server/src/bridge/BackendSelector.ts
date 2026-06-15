@@ -4,8 +4,7 @@
 // to helper-based JSON IPC.
 // ============================================================================
 
-import { FmProcessManager, type FmProcess } from "@afm-js/core";
-import { HelperProcess } from "./HelperProcess.js";
+import { FmProcessManager, HelperProcess, type FmProcess } from "@afm-js/core";
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
 import { join, dirname } from "node:path";

@@ -5,8 +5,7 @@
 // the Node-side mirror.
 // ============================================================================
 
-import { AfmError, type ModelBackend } from "@afm-js/core";
-import type { UnifiedBackend } from "../bridge/UnifiedBackend.js";
+import { AfmError, UnifiedBackend, type ModelBackend } from "@afm-js/core";
 
 export interface SessionOptions {
   temperature?: number;

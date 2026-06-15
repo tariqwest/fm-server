@@ -15,12 +15,12 @@ import {
   ModelBackend,
   ToolCallHandler,
   ToolResolution,
+  UnifiedBackend,
   type OpenAITool,
 } from "@afm-js/core";
 import type { McpStdioClient } from "./mcp/McpClient.js";
 import { makeContext } from "./session/ContextManager.js";
 import { Session } from "./session/Session.js";
-import type { UnifiedBackend } from "./bridge/UnifiedBackend.js";
 
 export interface AppConfig {
   /** Bearer token clients must present. Set to null/undefined to disable auth. */

@@ -5,10 +5,10 @@
 // ============================================================================
 
 import { serve, type ServerType } from "@hono/node-server";
+import { HelperProcess, UnifiedBackend } from "@afm-js/core";
+import type { BackendSelectorOptions, Backend } from "./bridge/BackendSelector.js";
 import { createApp } from "./app.js";
-import { HelperProcess } from "./bridge/HelperProcess.js";
-import { selectBackend, type BackendSelectorOptions, type Backend } from "./bridge/BackendSelector.js";
-import { UnifiedBackend } from "./bridge/UnifiedBackend.js";
+import { selectBackend } from "./bridge/BackendSelector.js";
 import { McpStdioClient } from "./mcp/McpClient.js";
 
 export interface McpServerSpec {

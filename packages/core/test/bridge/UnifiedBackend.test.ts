@@ -3,14 +3,14 @@
 // ============================================================================
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { UnifiedBackend, type BackendKind } from "../src/bridge/UnifiedBackend.js";
-import { 
-  HelperProcess, 
-  type HelperRequest, 
-  type HelperReply, 
-  type HelperStreamFrame 
-} from "../src/bridge/HelperProcess.js";
-import { AfmError } from "@afm-js/core";
+import { UnifiedBackend, type BackendKind } from "../../src/bridge/UnifiedBackend.js";
+import {
+  HelperProcess,
+  type HelperRequest,
+  type HelperReply,
+  type HelperStreamFrame,
+} from "../../src/bridge/HelperProcess.js";
+import { AfmError } from "../../src/errors/AfmError.js";
 
 // Mock HelperProcess using composition instead of inheritance
 class MockHelperProcess {

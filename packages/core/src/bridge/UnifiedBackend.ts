@@ -4,8 +4,18 @@
 // regardless of which backend is in use.
 // ============================================================================
 
-import { FmSocketClient, FmProcessManager, AfmError } from "@afm-js/core";
-import { HelperProcess, type HelperRequest, type HelperReply, type HelperOkAvailability, type HelperOkOpenSession, type HelperOkRespond, type HelperOkSimple, type HelperStreamFrame } from "./HelperProcess.js";
+import { FmSocketClient, FmProcessManager } from "../fm/index.js";
+import { AfmError } from "../errors/AfmError.js";
+import {
+  HelperProcess,
+  type HelperRequest,
+  type HelperReply,
+  type HelperOkAvailability,
+  type HelperOkOpenSession,
+  type HelperOkRespond,
+  type HelperOkSimple,
+  type HelperStreamFrame,
+} from "./HelperProcess.js";
 
 export type BackendKind = "fm" | "helper";
 

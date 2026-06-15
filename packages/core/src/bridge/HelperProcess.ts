@@ -6,7 +6,7 @@
 
 import { type ChildProcess, spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
-import { AfmError } from "@afm-js/core";
+import { AfmError } from "../errors/AfmError.js";
 
 export interface HelperRequest {
   op:
