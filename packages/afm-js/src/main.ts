@@ -12,7 +12,7 @@ import { serveCommand } from "./commands/serve.js";
 const main = defineCommand({
   meta: {
     name: "afm-js",
-    version: "0.0.1",
+    version: "0.0.2",
     description:
       "Apple Foundation Models for Node.js. OpenAI-compatible HTTP server + CLI for Apple Intelligence.",
   },

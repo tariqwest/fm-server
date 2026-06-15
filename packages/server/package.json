@@ -1,6 +1,6 @@
 {
   "name": "@afm-js/server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Hono-based OpenAI-compatible HTTP server for afm-js. Talks to the Swift afm-fm-helper over stdin/stdout.",
   "license": "MIT",
   "type": "module",

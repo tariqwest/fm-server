@@ -1,6 +1,6 @@
 {
   "name": "@afm-js/cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "afm-js CLI argument parsing — pure argv -> typed config.",
   "license": "MIT",
   "type": "module",
