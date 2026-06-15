@@ -16,7 +16,10 @@
     "clean": "tsc --build --clean && rm -rf packages/*/dist",
     "format": "biome format --write .",
     "lint": "biome lint .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "release:brew:generate": "node scripts/generate-homebrew-formula.js",
+    "release:brew:publish": "bash scripts/publish-to-tap.sh",
+    "release:prepare": "pnpm run build && pnpm run test && pnpm run release:brew:generate"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

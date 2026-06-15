@@ -37,6 +37,37 @@ A TypeScript / Node.js port of [apfel-plus](https://github.com/tariqwest/apfel-p
 
 **Why a Swift helper instead of FFI:** the only path that gives day-one PCC support. The helper imports `FoundationModels` directly and ships as a prebuilt arm64 binary; Node spawns it and multiplexes requests over a tiny JSON protocol. Process isolation also keeps Swift 6's strict concurrency out of Node's event loop.
 
+## Installation
+
+### Homebrew (Recommended)
+
+```bash
+# Add the tap
+brew tap tariqwest/tap
+
+# Install afm-js
+brew install afm-js
+
+# Start the server
+afm-js serve --port 11434
+```
+
+### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/tariqwest/afm-js.git
+cd afm-js
+
+# Install dependencies and build
+pnpm install
+(cd helper && swift build -c release)
+pnpm run build
+
+# Run directly from source
+node packages/afm-js/dist/main.js serve --port 11434
+```
+
 ## Layout
 
 ```
@@ -64,6 +95,12 @@ pnpm test
 
 ## Run the server
 
+**Homebrew installation:**
+```bash
+afm-js serve --port 11434 --token sk-test --debug
+```
+
+**From source:**
 ```bash
 node packages/afm-js/bin/afm-js.js serve --port 11434 --token sk-test --debug
 ```
@@ -85,6 +122,12 @@ curl -N -X POST http://127.0.0.1:11434/v1/chat/completions \
 
 With a local MCP server (`--mcp` supports a colon-separated list of `<cmd> <arg…>` specs):
 
+**Homebrew:**
+```bash
+afm-js serve --port 11434 --mcp "python3 /path/to/mcp/server.py"
+```
+
+**From source:**
 ```bash
 node packages/afm-js/bin/afm-js.js serve --port 11434 --mcp "python3 /path/to/mcp/server.py"
 ```
