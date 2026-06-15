@@ -70,7 +70,7 @@ function getHelperSha256() {
 }
 
 function generateFormula(version, sha256, helperSha256) {
-  const url = `https://github.com/tariqwest/afm-js/archive/refs/tags/v${version}.tar.gz`;
+  const url = `https://github.com/tariqwest/afm-js/releases/download/v${version}/afm-js-prebuilt-arm64-apple-darwin.tar.gz`;
 
   return `class AfmJs < Formula
   desc "Apple Foundation Models for Node.js — OpenAI-compatible HTTP server + CLI"
@@ -80,8 +80,7 @@ function generateFormula(version, sha256, helperSha256) {
   license "MIT"
   version "${version}"
 
-  depends_on "node" => :build
-  depends_on "pnpm" => :build
+  depends_on "node"
   depends_on :macos
   depends_on arch: :arm64
 
@@ -91,14 +90,10 @@ function generateFormula(version, sha256, helperSha256) {
   end
 
   def install
-    # Build the project
-    system "pnpm", "install"
-    system "pnpm", "run", "build"
+    # Install prebuilt afm-js package
+    libexec.install Dir["dist"], "bin"
 
-    # Install Node.js package
-    libexec.install Dir["packages/afm-js/dist"], "packages/afm-js/bin"
-    
-    # Create wrapper script
+    # Create wrapper script that uses Homebrew's node
     (bin/"afm-js").write <<~EOS
       #!/bin/bash
       export AFM_JS_HELPER_PATH="#{opt_prefix}/libexec/afm-fm-helper"
@@ -155,12 +150,17 @@ function main() {
   console.log(`Formula written to: ${outputPath}`);
   console.log("");
   console.log("Next steps:");
-  console.log("  1. Create a GitHub release with the source tarball");
-  console.log("  2. Update the SHA256 in the formula:");
-  console.log(`     shasum -a 256 <downloaded-tarball>`);
-  console.log("  3. Upload the helper binary:");
-  console.log(`     tar -czf afm-fm-helper-arm64-apple-darwin.tar.gz -C helper/.build/release afm-fm-helper`);
-  console.log("  4. Commit the formula to your tap:");
+  console.log("  1. Build the project:");
+  console.log("     pnpm install && pnpm run build");
+  console.log("  2. Create the prebuilt tarball:");
+  console.log("     tar -czf afm-js-prebuilt-arm64-apple-darwin.tar.gz -C packages/afm-js dist bin");
+  console.log("  3. Build and package the helper binary:");
+  console.log("     (cd helper && swift build -c release)");
+  console.log("     tar -czf afm-fm-helper-arm64-apple-darwin.tar.gz -C helper/.build/release afm-fm-helper");
+  console.log("  4. Create GitHub release and upload both tarballs");
+  console.log("  5. Update SHA256 values in formula:");
+  console.log("     shasum -a 256 afm-js-prebuilt-*.tar.gz afm-fm-helper-*.tar.gz");
+  console.log("  6. Commit formula to your tap:");
   console.log("     git clone https://github.com/tariqwest/homebrew-tap");
   console.log("     cp afm-js.rb homebrew-tap/Formula/");
   console.log("     cd homebrew-tap && git add -A && git commit -m 'Update afm-js to v" + version + "'");

@@ -4,7 +4,7 @@ Apple Foundation Models for Node.js. OpenAI-compatible HTTP server and CLI for A
 
 A TypeScript / Node.js port of [apfel-plus](https://github.com/tariqwest/apfel-plus) (Swift). Same OpenAI wire format, same `/v1/chat/completions`, `/v1/models`, `/health`, same `--pcc` opt-in to Apple Private Cloud Compute. Reaches the on-device `SystemLanguageModel` (and, on macOS 27+, `PrivateCloudComputeLanguageModel`) via a small Swift helper binary spoken to over newline-JSON.
 
-> **Status:** M3 — feature complete for the OpenAI surface. On top of M2 (streaming, multi-turn, tool calling, MCP stdio), M3 adds structured outputs (`response_format: json_object` and `json_schema`), the `autostart` LaunchAgent installer (with `KeepAlive` auto-restart), and the `benchmark` command. The remaining M3 item — a signed/notarized prebuilt helper binary and `npm publish` — is a packaging step that needs an Apple Developer ID; everything else runs from `pnpm install && (cd helper && swift build -c release)`.
+> **Status:** M3 — feature complete for the OpenAI surface. On top of M2 (streaming, multi-turn, tool calling, MCP stdio), M3 adds structured outputs (`response_format: json_object` and `json_schema`), the `autostart` LaunchAgent installer (with `KeepAlive` auto-restart), and the `benchmark` command. Install via Homebrew for prebuilt binaries, or build from source with `pnpm install && (cd helper && swift build -c release)`.
 
 ## Architecture
 

@@ -22,38 +22,39 @@ afm-js follows semantic versioning: `MAJOR.MINOR.PATCH`
    pnpm test
    ```
 
-2. **Build the helper binary**
+2. **Build the release artifacts**
    ```bash
-   cd helper
-   swift build -c release
-   cd ..
+   # Build the helper binary
+   (cd helper && swift build -c release)
+   
+   # Create the prebuilt afm-js tarball (contains dist/ and bin/)
+   tar -czf afm-js-prebuilt-arm64-apple-darwin.tar.gz -C packages/afm-js dist bin
+   
+   # Create the helper binary tarball
+   tar -czf afm-fm-helper-arm64-apple-darwin.tar.gz -C helper/.build/release afm-fm-helper
    ```
 
-3. **Create the release artifacts**
+3. **Calculate SHA256 hashes**
    ```bash
-   # Create helper binary tarball
-   tar -czf afm-fm-helper-arm64-apple-darwin.tar.gz -C helper/.build/release afm-fm-helper
-   
-   # Generate Homebrew formula (with placeholders)
-   pnpm run release:brew:generate
+   shasum -a 256 afm-js-prebuilt-arm64-apple-darwin.tar.gz afm-fm-helper-arm64-apple-darwin.tar.gz
    ```
 
 4. **Create GitHub Release**
    - Create a new GitHub release with tag `v{VERSION}`
-   - Upload the helper binary tarball: `afm-fm-helper-arm64-apple-darwin.tar.gz`
-   - Generate SHA256 for the source tarball after release creation
+   - Upload both tarballs:
+     - `afm-js-prebuilt-arm64-apple-darwin.tar.gz` (prebuilt Node.js packages)
+     - `afm-fm-helper-arm64-apple-darwin.tar.gz` (Swift helper binary)
 
-5. **Update SHA256 hashes**
+5. **Generate and update formula**
    ```bash
-   # Download the source tarball from the release
-   shasum -a 256 v${VERSION}.tar.gz
+   # Generate formula with correct SHA256 values
+   AFM_JS_VERSION=0.0.1 \
+   AFM_JS_SHA256=xxx \
+   AFM_JS_HELPER_SHA256=yyy \
+   node scripts/generate-homebrew-formula.js
    
-   # Get the helper binary SHA256
-   shasum -a 256 afm-fm-helper-arm64-apple-darwin.tar.gz
-   
-   # Update the formula with real SHA256 values
-   # Edit afm-js.rb manually or regenerate with:
-   AFM_JS_VERSION=0.0.1 AFM_JS_SHA256=xxx AFM_JS_HELPER_SHA256=yyy node scripts/generate-homebrew-formula.js
+   # Or regenerate with placeholders and edit manually
+   pnpm run release:brew:generate
    ```
 
 6. **Publish to Homebrew tap**

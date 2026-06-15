@@ -1,13 +1,12 @@
 class AfmJs < Formula
   desc "Apple Foundation Models for Node.js — OpenAI-compatible HTTP server + CLI"
   homepage "https://github.com/tariqwest/afm-js"
-  url "https://github.com/tariqwest/afm-js/archive/refs/tags/v0.0.1.tar.gz"
+  url "https://github.com/tariqwest/afm-js/releases/download/v0.0.1/afm-js-prebuilt-arm64-apple-darwin.tar.gz"
   sha256 "PLACEHOLDER_SHA256"
   license "MIT"
   version "0.0.1"
 
-  depends_on "node" => :build
-  depends_on "pnpm" => :build
+  depends_on "node"
   depends_on :macos
   depends_on arch: :arm64
 
@@ -17,14 +16,10 @@ class AfmJs < Formula
   end
 
   def install
-    # Build the project
-    system "pnpm", "install"
-    system "pnpm", "run", "build"
+    # Install prebuilt afm-js package
+    libexec.install Dir["dist"], "bin"
 
-    # Install Node.js package
-    libexec.install Dir["packages/afm-js/dist"], "packages/afm-js/bin"
-    
-    # Create wrapper script
+    # Create wrapper script that uses Homebrew's node
     (bin/"afm-js").write <<~EOS
       #!/bin/bash
       export AFM_JS_HELPER_PATH="#{opt_prefix}/libexec/afm-fm-helper"
