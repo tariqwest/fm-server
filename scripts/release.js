@@ -7,7 +7,8 @@
 //
 // Environment variables:
 //   GITHUB_TOKEN - GitHub personal access token (required)
-//   DRY_RUN - Set to "true" to skip actual GitHub operations
+//   RELEASE_DRY_RUN - Set to "true" to skip actual GitHub operations
+//   RELEASE_VERSION - Override version for release (updates all package.json files)
 // ============================================================================
 
 import { execSync } from "node:child_process";
@@ -26,9 +27,10 @@ const ROOT_DIR = dirname(__dirname);
 
 // Parse arguments
 const versionArg = process.argv[2];
-const VERSION = versionArg || JSON.parse(readFileSync(join(ROOT_DIR, "packages/afm-js/package.json"), "utf-8")).version;
+const currentVersion = JSON.parse(readFileSync(join(ROOT_DIR, "packages/afm-js/package.json"), "utf-8")).version;
+const VERSION = process.env.RELEASE_VERSION || versionArg || currentVersion;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const DRY_RUN = process.env.DRY_RUN === "true";
+const DRY_RUN = process.env.RELEASE_DRY_RUN === "true";
 const REPO = "tariqwest/afm-js";
 
 // Colors for output
@@ -356,7 +358,7 @@ async function publishToTap(version, formulaContent) {
 
 async function main() {
   logInfo(`Starting release process for afm-js v${VERSION}...`);
-  
+
   if (!GITHUB_TOKEN) {
     logError("GITHUB_TOKEN environment variable is required");
     process.exit(1);
@@ -364,6 +366,49 @@ async function main() {
 
   if (DRY_RUN) {
     logWarn("DRY RUN mode enabled - no actual changes will be made");
+  }
+
+  // Version comparison to prevent downgrades
+  if (VERSION === currentVersion) {
+    logError(`Release version ${VERSION} is the same as current version in package.json`);
+    logError("Update RELEASE_VERSION env variable to a higher version number");
+    process.exit(1);
+  }
+
+  // Simple version comparison (assumes semantic versioning)
+  const currentParts = currentVersion.split('.').map(Number);
+  const releaseParts = VERSION.split('.').map(Number);
+
+  for (let i = 0; i < 3; i++) {
+    if (releaseParts[i] < currentParts[i]) {
+      logError(`Release version ${VERSION} is lower than current version ${currentVersion}`);
+      logError("Update RELEASE_VERSION env variable to a higher version number");
+      process.exit(1);
+    }
+    if (releaseParts[i] > currentParts[i]) {
+      break;
+    }
+  }
+
+  // Update all package.json files to the release version
+  if (!DRY_RUN) {
+    logStep(`Updating all package.json files to version ${VERSION}...`);
+    const packageFiles = [
+      join(ROOT_DIR, "package.json"),
+      join(ROOT_DIR, "packages/afm-js/package.json"),
+      join(ROOT_DIR, "packages/core/package.json"),
+      join(ROOT_DIR, "packages/cli/package.json"),
+      join(ROOT_DIR, "packages/server/package.json"),
+    ];
+
+    for (const pkgFile of packageFiles) {
+      const pkg = JSON.parse(readFileSync(pkgFile, "utf-8"));
+      pkg.version = VERSION;
+      writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + "\n");
+      logInfo(`Updated ${pkgFile}`);
+    }
+  } else {
+    logWarn("DRY RUN: Skipping package.json version updates");
   }
 
   // Detect if running in CI environment
