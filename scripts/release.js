@@ -93,8 +93,9 @@ function generateFormula(version, sha256, helperSha256) {
   version "${version}"
 
   depends_on "node"
-  depends_on :macos
-  depends_on arch: :arm64
+  on_macos do
+    depends_on arch: :arm64
+  end
 
   resource "afm-fm-helper" do
     url "https://github.com/tariqwest/afm-js/releases/download/v${version}/afm-fm-helper-arm64-apple-darwin-${version}.tar.gz"
@@ -102,12 +103,13 @@ function generateFormula(version, sha256, helperSha256) {
   end
 
   def install
-    # Install prebuilt afm-js package
-    libexec.install Dir["dist"], "bin"
+    # Install prebuilt afm-js package (dist, bin, and bundled node_modules)
+    libexec.install "dist", "bin", "node_modules"
 
     # Create wrapper script that uses Homebrew's node
     (bin/"afm-js").write <<~EOS
       #!/bin/bash
+      export AFM_HELPER_PATH="#{opt_prefix}/libexec/afm-fm-helper"
       export AFM_JS_HELPER_PATH="#{opt_prefix}/libexec/afm-fm-helper"
       exec "#{Formula["node"].opt_bin}/node" "#{libexec}/bin/afm-js.js" "$@"
     EOS
@@ -120,34 +122,15 @@ function generateFormula(version, sha256, helperSha256) {
     chmod 0755, libexec/"afm-fm-helper"
   end
 
-  def caveats
-    <<~EOS
-      afm-js requires:
-        - macOS 26 (Tahoe) or later
-        - Apple Silicon (M1+)
-        - Apple Intelligence enabled in System Settings
-
-      To start the server manually:
-        afm-js serve --port 11434
-
-      To run as a background service (auto-starts at login):
-        brew services start afm-js
-
-      Manage the service:
-        brew services stop afm-js
-        brew services restart afm-js
-        brew services info afm-js
-    EOS
-  end
-
   service do
     run [opt_bin/"afm-js", "serve"]
     keep_alive true
     log_path var/"log/afm-js.log"
     error_log_path var/"log/afm-js-error.log"
-    environment_variables AFM_JS_HELPER_PATH: opt_prefix/"libexec/afm-fm-helper",
-                        AFM_JS_PORT: "1337",
-                        AFM_JS_TOKEN: "sk-apple-1337"
+    environment_variables AFM_HELPER_PATH: opt_prefix/"libexec/afm-fm-helper",
+                          AFM_JS_HELPER_PATH: opt_prefix/"libexec/afm-fm-helper",
+                          AFM_JS_PORT: "1337",
+                          AFM_JS_TOKEN: "*************"
     require_root false
   end
 
@@ -161,7 +144,7 @@ function generateFormula(version, sha256, helperSha256) {
       To start the server manually:
         afm-js serve --port 1337
 
-      The service runs with default port 1337 and token sk-apple-1337.
+      The service runs with default port 1337 and token *************.
       To configure the service with custom port or token:
         brew services set-env afm-js AFM_JS_PORT 8080
         brew services set-env afm-js AFM_JS_TOKEN your-secret-token
@@ -466,8 +449,14 @@ async function main() {
     logStep("Creating afm-js prebuilt tarball...");
     const afmJsTarball = join(tempDir, `afm-js-prebuilt-arm64-apple-darwin-${VERSION}.tar.gz`);
     if (!DRY_RUN) {
+      const deployDir = join(tempDir, "afm-js-deploy");
+      logStep("Bundling dependencies via pnpm deploy...");
       exec(
-        `tar -czf "${afmJsTarball}" -C packages/afm-js dist bin node_modules`,
+        `pnpm --filter=afm-js deploy --prod "${deployDir}"`,
+        { cwd: ROOT_DIR }
+      );
+      exec(
+        `tar -czf "${afmJsTarball}" -C "${deployDir}" dist bin node_modules`,
         { cwd: ROOT_DIR }
       );
     } else {
