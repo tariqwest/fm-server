@@ -1,6 +1,6 @@
 # afm-server
 
-OpenAI-compatible HTTP server for Apple Foundation Models on macOS. Drop it into any Node.js app or point an OpenAI client at `http://127.0.0.1:<port>/v1` to run inference on-device via [`apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk).
+OpenAI-compatible HTTP server for Apple Foundation Models on macOS. Drop it into any Node.js app or point an OpenAI client at `http://127.0.0.1:<port>/v1` to run inference on-device via [`ts-apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk).
 
 ## Overview
 
@@ -207,7 +207,6 @@ The adapter layer in `src/server/sdk/` maps OpenAI parameters to `GenerationOpti
 afm-server/
 ├── src/server/       HTTP routes, SDK adapter, MCP, validators
 ├── test/             unit and e2e tests
-├── examples/         standalone apple-fm-sdk demos
 └── scripts/release.js
 ```
 
@@ -239,10 +238,6 @@ import {
 ```
 
 See `src/server/index.ts` for the full export list.
-
-## Using apple-fm-sdk directly
-
-afm-server is the HTTP compatibility layer. For native FFI access without HTTP, use [`apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk) directly. Examples live in [`examples/`](examples/) and the [SDK repository](https://github.com/tariqwest/ts-apple-fm-sdk/tree/master/examples).
 
 ## Background service (Homebrew)
 
