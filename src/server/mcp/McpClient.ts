@@ -85,7 +85,7 @@ export class McpStdioClient {
     await this.request("initialize", {
       protocolVersion: "2024-11-05",
       capabilities: { roots: { listChanged: false } },
-      clientInfo: { name: "afm-server", version: "0.0.1" },
+      clientInfo: { name: "fm-server", version: "0.0.1" },
     });
     await this.notify("notifications/initialized", {});
     // Check if process is still alive after handshake (race condition fix)

@@ -1,4 +1,4 @@
-// afm-server public surface.
+// fm-server public surface.
 export { createApp, type AppConfig } from "./app.js";
 export {
   startServer,

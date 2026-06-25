@@ -1,5 +1,5 @@
 // ============================================================================
-// token-count.ts — `afm-server token-count "..."`. Count tokens without generating.
+// token-count.ts — `fm-server token-count "..."`. Count tokens without generating.
 // ============================================================================
 
 import { defineCommand } from "citty";
@@ -28,7 +28,7 @@ export const tokenCountCommand = defineCommand({
   async run({ args }) {
     const text = args.text ? String(args.text) : await readAllStdin();
     if (!text.trim() && !args.instructions) {
-      process.stderr.write("afm-server: no text or instructions provided\n");
+      process.stderr.write("fm-server: no text or instructions provided\n");
       process.exit(2);
     }
 
@@ -50,7 +50,7 @@ export const tokenCountCommand = defineCommand({
         process.stdout.write(`${promptTokens}\n`);
       }
     } catch (err) {
-      process.stderr.write(`afm-server: token count failed: ${err}\n`);
+      process.stderr.write(`fm-server: token count failed: ${err}\n`);
       process.exit(1);
     } finally {
       shutdown();

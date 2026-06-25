@@ -1,10 +1,10 @@
-# Releasing afm-server
+# Releasing fm-server
 
-This document describes the release process for afm-server, including Homebrew tap publication.
+This document describes the release process for fm-server, including Homebrew tap publication.
 
 ## Version Numbering
 
-afm-server follows semantic versioning: `MAJOR.MINOR.PATCH`
+fm-server follows semantic versioning: `MAJOR.MINOR.PATCH`
 
 - **MAJOR**: Breaking changes to the API or CLI interface
 - **MINOR**: New features
@@ -59,14 +59,14 @@ RELEASE_DRY_RUN=true GITHUB_TOKEN=test pnpm run release
 | `GITHUB_TOKEN` | GitHub personal access token (required) |
 | `RELEASE_DRY_RUN` | Set to `"true"` to skip actual GitHub operations |
 | `TAP_REPO` | Tap repository (default: `tariqwest/homebrew-tap`) |
-| `TAP_DIR` | Local directory for tap clone (default: `~/.cache/afm-server-tap`) |
+| `TAP_DIR` | Local directory for tap clone (default: `~/.cache/fm-server-tap`) |
 
 ## Homebrew Tap Structure
 
 ```
 homebrew-tap/
 ├── Formula/
-│   └── afm-server.rb
+│   └── fm-server.rb
 ├── README.md
 └── LICENSE
 ```
@@ -75,5 +75,5 @@ Users can install via:
 
 ```bash
 brew tap tariqwest/tap
-brew install afm-server
+brew install fm-server
 ```

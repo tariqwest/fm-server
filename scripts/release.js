@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================================
-// release.js — Complete release workflow for afm-server
+// release.js — Complete release workflow for fm-server
 //
 // Usage:
 //   node scripts/release.js [version]
@@ -11,7 +11,7 @@
 //   RELEASE_VERSION - Override version for release (updates package.json)
 //   APPLE_FM_SDK_PATH - Path to ts-apple-fm-sdk checkout (default: ../ts-apple-fm-sdk)
 //   TAP_REPO - Homebrew tap repository (default: tariqwest/homebrew-tap)
-//   TAP_DIR - Local tap clone directory (default: ~/.cache/afm-server-tap)
+//   TAP_DIR - Local tap clone directory (default: ~/.cache/fm-server-tap)
 //
 // CI: set RELEASE_VERSION from the pushed tag (e.g. v0.0.11 → 0.0.11) and ensure
 // apple-fm-sdk is available at APPLE_FM_SDK_PATH before running.
@@ -43,7 +43,7 @@ const currentVersion = JSON.parse(readFileSync(join(ROOT_DIR, "package.json"), "
 const VERSION = resolveReleaseVersion();
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const DRY_RUN = process.env.RELEASE_DRY_RUN === "true";
-const REPO = "tariqwest/afm-server";
+const REPO = "tariqwest/fm-server";
 const APPLE_FM_SDK_PATH =
   process.env.APPLE_FM_SDK_PATH || join(ROOT_DIR, "..", "ts-apple-fm-sdk");
 
@@ -116,7 +116,7 @@ function resolveAppleFmSdkPath() {
   if (!existsSync(join(APPLE_FM_SDK_PATH, "package.json"))) {
     throw new Error(
       `apple-fm-sdk not found at ${APPLE_FM_SDK_PATH}. ` +
-        "Clone https://github.com/tariqwest/ts-apple-fm-sdk alongside afm-server " +
+        "Clone https://github.com/tariqwest/ts-apple-fm-sdk alongside fm-server " +
         "or set APPLE_FM_SDK_PATH.",
     );
   }
@@ -180,11 +180,11 @@ function bundlePrebuiltPackage(deployDir, version) {
 }
 
 function generateFormula(version, sha256) {
-  const url = `https://github.com/tariqwest/afm-server/releases/download/v${version}/afm-server-prebuilt-arm64-apple-darwin-${version}.tar.gz`;
+  const url = `https://github.com/tariqwest/fm-server/releases/download/v${version}/fm-server-prebuilt-arm64-apple-darwin-${version}.tar.gz`;
 
   return `class AfmServer < Formula
   desc "Apple Foundation Models for Node.js — OpenAI-compatible HTTP server + CLI"
-  homepage "https://github.com/tariqwest/afm-server"
+  homepage "https://github.com/tariqwest/fm-server"
   url "${url}"
   sha256 "${sha256}"
   license "MIT"
@@ -198,51 +198,51 @@ function generateFormula(version, sha256) {
   def install
     libexec.install "dist", "bin", "node_modules"
 
-    (bin/"afm-server").write <<~EOS
+    (bin/"fm-server").write <<~EOS
       #!/bin/bash
-      exec "#{Formula["node"].opt_bin}/node" "#{libexec}/bin/afm-server.js" "$@"
+      exec "#{Formula["node"].opt_bin}/node" "#{libexec}/bin/fm-server.js" "$@"
     EOS
-    chmod 0755, bin/"afm-server"
+    chmod 0755, bin/"fm-server"
   end
 
   service do
-    run [opt_bin/"afm-server", "serve"]
+    run [opt_bin/"fm-server", "serve"]
     keep_alive true
-    log_path var/"log/afm-server.log"
-    error_log_path var/"log/afm-server-error.log"
-    environment_variables AFM_SERVER_PORT: "1337",
-                          AFM_SERVER_TOKEN: "*************"
+    log_path var/"log/fm-server.log"
+    error_log_path var/"log/fm-server-error.log"
+    environment_variables FM_SERVER_PORT: "1337",
+                          FM_SERVER_TOKEN: "*************"
     require_root false
   end
 
   def caveats
     <<~EOS
-      afm-server requires:
+      fm-server requires:
         - macOS 26 (Tahoe) or later
         - Apple Silicon (M1+)
         - Apple Intelligence enabled in System Settings
 
       To start the server manually:
-        afm-server serve --port 1337
+        fm-server serve --port 1337
 
       The service runs with default port 1337 and token *************.
       To configure the service with custom port or token:
-        brew services set-env afm-server AFM_SERVER_PORT 8080
-        brew services set-env afm-server AFM_SERVER_TOKEN your-secret-token
-        brew services restart afm-server
+        brew services set-env fm-server FM_SERVER_PORT 8080
+        brew services set-env fm-server FM_SERVER_TOKEN your-secret-token
+        brew services restart fm-server
 
       To run as a background service (auto-starts at login):
-        brew services start afm-server
+        brew services start fm-server
 
       Manage the service:
-        brew services stop afm-server
-        brew services restart afm-server
-        brew services info afm-server
+        brew services stop fm-server
+        brew services restart fm-server
+        brew services info fm-server
     EOS
   end
 
   test do
-    assert_match "afm-server", shell_output("#{bin}/afm-server --help")
+    assert_match "fm-server", shell_output("#{bin}/fm-server --help")
   end
 end
 `;
@@ -253,7 +253,7 @@ async function githubRequest(endpoint, options = {}) {
   const headers = {
     Authorization: `Bearer ${GITHUB_TOKEN}`,
     Accept: "application/vnd.github.v3+json",
-    "User-Agent": "afm-server-release-script",
+    "User-Agent": "fm-server-release-script",
     ...options.headers,
   };
 
@@ -278,7 +278,7 @@ async function createRelease(tag, name, body) {
   if (DRY_RUN) {
     logWarn("DRY RUN: Skipping release creation");
     return {
-      upload_url: "https://uploads.github.com/repos/tariqwest/afm-server/releases/123/assets{?name}",
+      upload_url: "https://uploads.github.com/repos/tariqwest/fm-server/releases/123/assets{?name}",
     };
   }
 
@@ -351,7 +351,7 @@ async function uploadAsset(release, filePath, contentType) {
 
 async function publishToTap(version, formulaContent) {
   const TAP_REPO = process.env.TAP_REPO || "tariqwest/homebrew-tap";
-  const TAP_DIR = process.env.TAP_DIR || join(process.env.HOME || "", ".cache/afm-server-tap");
+  const TAP_DIR = process.env.TAP_DIR || join(process.env.HOME || "", ".cache/fm-server-tap");
 
   logStep(`Publishing formula to ${TAP_REPO}...`);
 
@@ -379,11 +379,11 @@ async function publishToTap(version, formulaContent) {
     mkdirSync(formulaDir, { recursive: true });
   }
 
-  const formulaPath = join(formulaDir, "afm-server.rb");
+  const formulaPath = join(formulaDir, "fm-server.rb");
   writeFileSync(formulaPath, formulaContent);
 
   try {
-    exec('git diff --quiet HEAD -- "Formula/afm-server.rb"', { cwd: TAP_DIR });
+    exec('git diff --quiet HEAD -- "Formula/fm-server.rb"', { cwd: TAP_DIR });
     logWarn("No changes detected in formula. Already up to date?");
     return;
   } catch {
@@ -391,8 +391,8 @@ async function publishToTap(version, formulaContent) {
   }
 
   logInfo("Committing changes...");
-  exec('git add "Formula/afm-server.rb"', { cwd: TAP_DIR });
-  exec(`git commit -m "afm-server ${version}"`, { cwd: TAP_DIR });
+  exec('git add "Formula/fm-server.rb"', { cwd: TAP_DIR });
+  exec(`git commit -m "fm-server ${version}"`, { cwd: TAP_DIR });
 
   logInfo(`Pushing to ${TAP_REPO}...`);
   const pushUrl = GITHUB_TOKEN
@@ -409,11 +409,11 @@ async function publishToTap(version, formulaContent) {
     }
   }
 
-  logInfo(`Successfully published afm-server ${version} to ${TAP_REPO}!`);
+  logInfo(`Successfully published fm-server ${version} to ${TAP_REPO}!`);
 }
 
 async function main() {
-  logInfo(`Starting release process for afm-server v${VERSION}...`);
+  logInfo(`Starting release process for fm-server v${VERSION}...`);
 
   if (!GITHUB_TOKEN) {
     logError("GITHUB_TOKEN environment variable is required");
@@ -485,7 +485,7 @@ async function main() {
     mkdirSync(tempDir, { recursive: true });
 
     if (!isCI) {
-      logStep("Building afm-server package...");
+      logStep("Building fm-server package...");
       if (!DRY_RUN) {
         exec("pnpm run build", { cwd: ROOT_DIR });
       } else {
@@ -493,14 +493,14 @@ async function main() {
       }
     }
 
-    logStep("Creating afm-server prebuilt tarball...");
+    logStep("Creating fm-server prebuilt tarball...");
     const afmServerTarball = join(
       tempDir,
-      `afm-server-prebuilt-arm64-apple-darwin-${VERSION}.tar.gz`,
+      `fm-server-prebuilt-arm64-apple-darwin-${VERSION}.tar.gz`,
     );
     if (!DRY_RUN) {
-      const deployDir = join(tempDir, "afm-server-deploy");
-      logStep("Bundling afm-server with apple-fm-sdk and production dependencies...");
+      const deployDir = join(tempDir, "fm-server-deploy");
+      logStep("Bundling fm-server with apple-fm-sdk and production dependencies...");
       bundlePrebuiltPackage(deployDir, VERSION);
       exec(`tar -czf "${afmServerTarball}" -C "${deployDir}" dist bin node_modules`, {
         cwd: ROOT_DIR,
@@ -512,16 +512,16 @@ async function main() {
 
     logStep("Calculating SHA256 hash...");
     const afmServerSha256 = calculateSha256(afmServerTarball);
-    logInfo(`afm-server SHA256: ${afmServerSha256}`);
+    logInfo(`fm-server SHA256: ${afmServerSha256}`);
 
     const tagName = `v${VERSION}`;
-    const releaseName = `afm-server ${VERSION}`;
-    const releaseBody = `afm-server ${VERSION}
+    const releaseName = `fm-server ${VERSION}`;
+    const releaseBody = `fm-server ${VERSION}
 
 ## Installation
 
 \`\`\`bash
-brew install tariqwest/tap/afm-server
+brew install tariqwest/tap/fm-server
 \`\`\`
 
 ## What's Changed
@@ -530,7 +530,7 @@ See the [release notes](https://github.com/${REPO}/releases/tag/v${VERSION}) and
 
 ## Artifacts
 
-- \`afm-server-prebuilt-arm64-apple-darwin-${VERSION}.tar.gz\` - Prebuilt \`dist/\`, \`bin/\`, and production \`node_modules/\` (includes bundled \`apple-fm-sdk\`)
+- \`fm-server-prebuilt-arm64-apple-darwin-${VERSION}.tar.gz\` - Prebuilt \`dist/\`, \`bin/\`, and production \`node_modules/\` (includes bundled \`apple-fm-sdk\`)
 
 ## Requirements
 
@@ -543,7 +543,7 @@ See the [release notes](https://github.com/${REPO}/releases/tag/v${VERSION}) and
     logInfo(`Release created: ${release.html_url}`);
 
     const afmServerAsset = await uploadAsset(release, afmServerTarball, "application/gzip");
-    logInfo(`afm-server artifact: ${afmServerAsset.browser_download_url}`);
+    logInfo(`fm-server artifact: ${afmServerAsset.browser_download_url}`);
 
     logStep("Generating Homebrew formula...");
     const formulaContent = generateFormula(VERSION, afmServerSha256);
@@ -556,7 +556,7 @@ See the [release notes](https://github.com/${REPO}/releases/tag/v${VERSION}) and
     console.log("");
     console.log("Homebrew formula updated and published to tap.");
     console.log("Users can install via:");
-    console.log("  brew install tariqwest/tap/afm-server");
+    console.log("  brew install tariqwest/tap/fm-server");
   } catch (error) {
     if (!DRY_RUN) {
       rollbackPackageVersions();

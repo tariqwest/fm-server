@@ -1,5 +1,5 @@
 {
-  "name": "afm-server",
+  "name": "fm-server",
   "version": "0.0.10",
   "description": "Apple Foundation Models for Node.js — OpenAI-compatible HTTP server and CLI for Apple Intelligence.",
   "license": "MIT",
@@ -14,7 +14,7 @@
     }
   },
   "bin": {
-    "afm-server": "./bin/afm-server.js"
+    "fm-server": "./bin/fm-server.js"
   },
   "files": [
     "dist",

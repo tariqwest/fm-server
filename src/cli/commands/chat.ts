@@ -1,5 +1,5 @@
 // ============================================================================
-// chat.ts — `afm-server chat`. Multi-turn REPL via node:readline.
+// chat.ts — `fm-server chat`. Multi-turn REPL via node:readline.
 // ============================================================================
 
 import { createInterface } from "node:readline/promises";
@@ -23,13 +23,13 @@ export const chatCommand = defineCommand({
   },
   async run({ args }) {
     if (!input.isTTY) {
-      process.stderr.write("afm-server chat: requires an interactive terminal (stdin must be a TTY)\n");
+      process.stderr.write("fm-server chat: requires an interactive terminal (stdin must be a TTY)\n");
       process.exit(2);
     }
 
     if (args.model === "pcc") {
       process.stderr.write(
-        "afm-server: Private Cloud Compute (model: 'pcc') is not supported. Use model: 'system'.\n",
+        "fm-server: Private Cloud Compute (model: 'pcc') is not supported. Use model: 'system'.\n",
       );
       process.exit(2);
     }
@@ -43,7 +43,7 @@ export const chatCommand = defineCommand({
     );
 
     const rl = createInterface({ input, output });
-    process.stdout.write("afm-server chat (on-device). Ctrl-D to exit.\n");
+    process.stdout.write("fm-server chat (on-device). Ctrl-D to exit.\n");
 
     try {
       while (true) {
@@ -60,7 +60,7 @@ export const chatCommand = defineCommand({
           process.stdout.write("\n");
         } catch (err) {
           process.stdout.write("\n");
-          process.stderr.write(`afm-server: error - ${err instanceof Error ? err.message : err}\n`);
+          process.stderr.write(`fm-server: error - ${err instanceof Error ? err.message : err}\n`);
         }
       }
     } finally {

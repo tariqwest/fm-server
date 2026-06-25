@@ -1,5 +1,5 @@
 // ============================================================================
-// schema.ts — `afm-server schema object --name ... --string field1 ...`
+// schema.ts — `fm-server schema object --name ... --string field1 ...`
 // Generate a JSON schema for structured output.
 // Mirrors Apple's `fm schema` command.
 // ============================================================================
@@ -49,7 +49,7 @@ export const schemaCommand = defineCommand({
   async run({ args }) {
     const schemaType = String(args.type);
     if (schemaType !== "object" && schemaType !== "array") {
-      process.stderr.write(`afm-server: schema type must be 'object' or 'array', got '${schemaType}'\n`);
+      process.stderr.write(`fm-server: schema type must be 'object' or 'array', got '${schemaType}'\n`);
       process.exit(2);
     }
 

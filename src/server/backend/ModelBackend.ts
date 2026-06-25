@@ -22,7 +22,7 @@ export const ModelBackend = {
    * Parse a request's `model` field into a backend choice.
    *
    * Unknown values fall back to `onDevice`: OpenAI clients routinely hard-code
-   * model ids like `gpt-4`, and afm-server has always served them locally rather
+   * model ids like `gpt-4`, and fm-server has always served them locally rather
    * than rejecting the request. PCC is strictly opt-in via the documented
    * aliases.
    */

@@ -1,6 +1,6 @@
 // ============================================================================
 // McpProtocol.ts — Pure types describing the JSON-RPC subset of MCP that
-// afm-server drives. The McpClient writes/reads these over
+// fm-server drives. The McpClient writes/reads these over
 // stdio or HTTP.
 //
 // Port of Sources/Core/MCPProtocol.swift.

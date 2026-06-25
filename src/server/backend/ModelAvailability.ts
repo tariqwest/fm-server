@@ -53,7 +53,7 @@ export const ModelAvailability = {
           "",
           "Apple Intelligence requires an Apple Silicon Mac (M1 or later).",
           "Intel Macs are not supported - this is a hard Apple requirement,",
-          "not an afm-server limitation.",
+          "not an fm-server limitation.",
           "",
           "Details: https://support.apple.com/en-us/121115",
         ].join("\n");
@@ -73,9 +73,9 @@ export const ModelAvailability = {
           "The Apple Intelligence model reported an unknown unavailable reason.",
           "",
           "Try:",
-          "  - Updating afm-server",
+          "  - Updating fm-server",
           "  - Checking System Settings > Apple Intelligence & Siri",
-          "  - Filing an issue at https://github.com/tariqwest/afm-server/issues",
+          "  - Filing an issue at https://github.com/tariqwest/fm-server/issues",
         ].join("\n");
     }
   },

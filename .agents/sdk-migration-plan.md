@@ -4,7 +4,7 @@
 
 Remove subprocess backends (`/usr/bin/fm`, `afm-fm-helper`) and integrate `apple-fm-sdk` in-process inside `src/server/`. Keep the OpenAI-compatible HTTP surface unchanged.
 
-**Status: completed.** The project is now a single package (`afm-server`) with `src/server/` and `src/cli/`.
+**Status: completed.** The project is now a single package (`fm-server`) with `src/server/` and `src/cli/`.
 
 ## Scope Decisions
 
@@ -15,7 +15,7 @@ Remove subprocess backends (`/usr/bin/fm`, `afm-fm-helper`) and integrate `apple
 ## Architecture
 
 ```
-afm-server CLI → Hono server → InferenceService → apple-fm-sdk (in-process FFI)
+fm-server CLI → Hono server → InferenceService → apple-fm-sdk (in-process FFI)
 ```
 
 ## New Modules (`src/server/sdk/`)

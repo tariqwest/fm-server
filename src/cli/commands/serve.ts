@@ -1,5 +1,5 @@
 // ============================================================================
-// serve.ts — `afm-server serve` subcommand. Starts the OpenAI-compatible HTTP
+// serve.ts — `fm-server serve` subcommand. Starts the OpenAI-compatible HTTP
 // server and handles SIGINT/SIGTERM cleanly.
 // ============================================================================
 
@@ -35,15 +35,15 @@ export const serveCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const debugFn = args.debug ? (msg: string) => process.stderr.write(`afm-server: ${msg}\n`) : undefined;
+    const debugFn = args.debug ? (msg: string) => process.stderr.write(`fm-server: ${msg}\n`) : undefined;
 
-    const port = args.port ? Number(args.port) : (process.env.AFM_SERVER_PORT ? Number(process.env.AFM_SERVER_PORT) : 1337);
+    const port = args.port ? Number(args.port) : (process.env.FM_SERVER_PORT ? Number(process.env.FM_SERVER_PORT) : 1337);
     if (!Number.isFinite(port) || port < 1 || port > 65535) {
-      process.stderr.write(`afm-server: invalid --port value: ${args.port}\n`);
+      process.stderr.write(`fm-server: invalid --port value: ${args.port}\n`);
       process.exit(2);
     }
 
-    const token = (args.token as string | undefined) ?? process.env.AFM_SERVER_TOKEN ?? "sk-apple-1337";
+    const token = (args.token as string | undefined) ?? process.env.FM_SERVER_TOKEN ?? "sk-apple-1337";
     const host = (args.host as string | undefined) ?? "127.0.0.1";
     const mcpServers = parseMcpSpecs(args.mcp as string | undefined);
 
@@ -55,13 +55,13 @@ export const serveCommand = defineCommand({
       debug: debugFn,
     });
 
-    process.stdout.write(`afm-server serving on http://${host}:${port} (backend: apple-fm-sdk)\n`);
+    process.stdout.write(`fm-server serving on http://${host}:${port} (backend: apple-fm-sdk)\n`);
 
     let stopping = false;
     const shutdown = async (signal: NodeJS.Signals) => {
       if (stopping) return;
       stopping = true;
-      process.stderr.write(`afm-server: received ${signal}, shutting down\n`);
+      process.stderr.write(`fm-server: received ${signal}, shutting down\n`);
       await server.stop();
       process.exit(0);
     };

@@ -1,5 +1,5 @@
 // ============================================================================
-// main.ts — Entry point for the afm-server binary. Defines the top-level CLI
+// main.ts — Entry point for the fm-server binary. Defines the top-level CLI
 // surface via citty subcommands.
 // ============================================================================
 
@@ -15,7 +15,7 @@ import { tokenCountCommand } from "./commands/token-count.js";
 
 const main = defineCommand({
   meta: {
-    name: "afm-server",
+    name: "fm-server",
     version: VERSION,
     description:
       "Apple Foundation Models for Node.js. OpenAI-compatible HTTP server + CLI for Apple Intelligence.",

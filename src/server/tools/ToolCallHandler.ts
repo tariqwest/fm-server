@@ -1,6 +1,6 @@
 // ============================================================================
 // ToolCallHandler.ts — Out-of-band tool-call detector + system-prompt
-// injector. afm-server (like apfel-plus) does not use FoundationModels' native
+// injector. fm-server (like apfel-plus) does not use FoundationModels' native
 // in-band tool invocation; instead we instruct the model to emit a specific
 // JSON envelope in its text output, then parse it back here.
 //
@@ -33,7 +33,7 @@ export const ToolCallHandler = {
 
   /**
    * Build text-based schema injection for tools. Always emitted today
-   * (afm-server does not yet pass tools natively to the SDK).
+   * (fm-server does not yet pass tools natively to the SDK).
    */
   buildFallbackPrompt(tools: readonly ToolDef[]): string {
     if (tools.length === 0) return "";

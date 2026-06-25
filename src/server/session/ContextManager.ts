@@ -5,7 +5,7 @@
 //
 // Port-of-record for `Sources/ContextManager.swift`. The Swift impl uses
 // FoundationModels' native `Transcript` API (Instructions / Prompt / Response
-// entries) to reconstruct session state without re-inferring history. afm-server's
+// entries) to reconstruct session state without re-inferring history. fm-server's
 // helper protocol doesn't yet expose Transcript entries on the wire, so we
 // folded history into a textual conversation block. This keeps multi-turn
 // working at correct semantics today and leaves a clean upgrade path: when

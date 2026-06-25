@@ -1,18 +1,18 @@
-# AGENTS.md — afm-server
+# AGENTS.md — fm-server
 
 Guide for AI agents working in this repository.
 
 ## Project summary
 
-**afm-server** is a single-package Node.js app that exposes Apple Foundation Models through:
+**fm-server** is a single-package Node.js app that exposes Apple Foundation Models through:
 
 1. An OpenAI-compatible HTTP server (Hono)
-2. A CLI binary (`afm-server`)
+2. A CLI binary (`fm-server`)
 
 All inference runs **in-process** via [`apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk). There are no subprocess backends, no Swift helper, and no workspace/monorepo layout.
 
-- **Repo:** https://github.com/tariqwest/afm-server
-- **Package name:** `afm-server` (version in `package.json`)
+- **Repo:** https://github.com/tariqwest/fm-server
+- **Package name:** `fm-server` (version in `package.json`)
 - **Platform:** macOS 26+, Apple Silicon only (`package.json` `os`/`cpu` fields)
 
 ## Architecture
@@ -69,14 +69,14 @@ HTTP request
 | `src/cli/main.ts` | CLI entry (citty subcommands) |
 | `src/cli/commands/` | Individual CLI commands |
 | `src/cli/inference.ts` | `createInference()` helper for CLI |
-| `bin/afm-server.js` | Bin shim → `dist/cli/main.js` |
+| `bin/fm-server.js` | Bin shim → `dist/cli/main.js` |
 | `test/unit/` | Vitest unit tests |
 | `test/e2e/` | Live CLI/server tests (require native SDK) |
 | `scripts/release.js` | Release + Homebrew formula pipeline |
 
 ## Public API
 
-Exported from `src/server/index.ts`, published as `afm-server`:
+Exported from `src/server/index.ts`, published as `fm-server`:
 
 ```typescript
 import {
@@ -93,7 +93,7 @@ import {
   McpStdioClient,
   makeContext,
   VERSION,
-} from "afm-server";
+} from "fm-server";
 ```
 
 CLI commands import from `../../server/index.js` (relative), not from the package name.
@@ -119,7 +119,7 @@ E2E tests call `isNativeAvailable()` from `apple-fm-sdk` and skip when bindings 
 - **Lint/format** — Biome (`pnpm run check`)
 - **Errors** — SDK errors flow through `SdkErrorMapper` → `AfmError` → OpenAI JSON envelope
 - **Model ID** — only `system` accepted; `pcc` returns 400 with `pccUnsupported`
-- **Logging prefix** — CLI messages use `afm-server:` on stderr
+- **Logging prefix** — CLI messages use `fm-server:` on stderr
 
 ## SDK error → HTTP status
 
@@ -155,10 +155,10 @@ After edits: `pnpm run build && pnpm test && pnpm run typecheck`.
 
 See `RELEASING.md`. Release artifacts:
 
-- `afm-server-prebuilt-arm64-apple-darwin-{version}.tar.gz`
-- Homebrew formula `afm-server.rb` in `tariqwest/homebrew-tap`
+- `fm-server-prebuilt-arm64-apple-darwin-{version}.tar.gz`
+- Homebrew formula `fm-server.rb` in `tariqwest/homebrew-tap`
 
-Env vars: `GITHUB_TOKEN`, `RELEASE_DRY_RUN`, `TAP_DIR` (default `~/.cache/afm-server-tap`).
+Env vars: `GITHUB_TOKEN`, `RELEASE_DRY_RUN`, `TAP_DIR` (default `~/.cache/fm-server-tap`).
 
 ## Related docs
 

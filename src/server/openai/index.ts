@@ -15,7 +15,7 @@ const TextContentPart = z.object({
 
 const ImageContentPart = z.object({
   type: z.literal("image_url"),
-  // afm-server rejects image content with a 400 (the on-device model is text-only),
+  // fm-server rejects image content with a 400 (the on-device model is text-only),
   // but we accept the shape so the validator can give a clear error.
   image_url: z.object({ url: z.string() }).passthrough(),
 });
@@ -139,7 +139,7 @@ export const ChatCompletionRequest = z.object({
   presence_penalty: z.number().optional(),
   frequency_penalty: z.number().optional(),
   user: z.string().optional(),
-  // afm-server extensions (X-prefix to avoid colliding with future OpenAI fields).
+  // fm-server extensions (X-prefix to avoid colliding with future OpenAI fields).
   x_context_strategy: z.string().optional(),
   x_context_max_turns: z.number().int().optional(),
   x_context_output_reserve: z.number().int().optional(),

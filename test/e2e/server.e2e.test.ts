@@ -31,7 +31,7 @@ async function waitForServer(url: string, timeoutMs = 15000): Promise<void> {
 
 const describeE2E = isNativeAvailable() ? describe : describe.skip;
 
-describeE2E("E2E: afm-server serve (built app)", () => {
+describeE2E("E2E: fm-server serve (built app)", () => {
   let serverProcess: ReturnType<typeof spawn> | null = null;
 
   beforeAll(async () => {

@@ -48,7 +48,7 @@ export async function startServer(opts: StartOptions): Promise<RunningServer> {
 
   return new Promise<RunningServer>((resolve) => {
     const server: ServerType = serve({ fetch: app.fetch, port, hostname }, () => {
-      debug(`afm-server listening on http://${hostname}:${port} (backend: apple-fm-sdk)`);
+      debug(`fm-server listening on http://${hostname}:${port} (backend: apple-fm-sdk)`);
       resolve({
         stop: () =>
           new Promise<void>((res) => {

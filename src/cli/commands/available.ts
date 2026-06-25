@@ -1,5 +1,5 @@
 // ============================================================================
-// available.ts — `afm-server available`. Check if Foundation Models are available.
+// available.ts — `fm-server available`. Check if Foundation Models are available.
 // ============================================================================
 
 import { defineCommand } from "citty";
@@ -41,7 +41,7 @@ export const availableCommand = defineCommand({
 
       process.exit(isAvailable ? 0 : 1);
     } catch (err) {
-      process.stderr.write(`afm-server: availability check failed: ${err}\n`);
+      process.stderr.write(`fm-server: availability check failed: ${err}\n`);
       process.exit(1);
     } finally {
       shutdown();

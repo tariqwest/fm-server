@@ -1,5 +1,5 @@
 // ============================================================================
-// respond.ts — `afm-server respond "..."`. Generate a response to a prompt.
+// respond.ts — `fm-server respond "..."`. Generate a response to a prompt.
 // ============================================================================
 
 import { defineCommand } from "citty";
@@ -50,13 +50,13 @@ export const respondCommand = defineCommand({
   async run({ args }) {
     const promptText = args.text ? String(args.text) : await readAllStdin();
     if (!promptText.trim()) {
-      process.stderr.write("afm-server: no prompt provided\n");
+      process.stderr.write("fm-server: no prompt provided\n");
       process.exit(2);
     }
 
     if (args.model === "pcc") {
       process.stderr.write(
-        "afm-server: Private Cloud Compute (model: 'pcc') is not supported. Use model: 'system'.\n",
+        "fm-server: Private Cloud Compute (model: 'pcc') is not supported. Use model: 'system'.\n",
       );
       process.exit(2);
     }

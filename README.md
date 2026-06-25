@@ -1,10 +1,10 @@
-# afm-server
+# fm-server
 
 OpenAI-compatible HTTP server for Apple Foundation Models on macOS. Drop it into any Node.js app or point an OpenAI client at `http://127.0.0.1:<port>/v1` to run inference on-device via [`ts-apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk).
 
 ## Overview
 
-afm-server exposes a small, OpenAI-shaped HTTP surface over Apple's on-device `SystemLanguageModel`. Inference runs in-process through `apple-fm-sdk` — no subprocess backends, no helper binaries, no IPC to `/usr/bin/fm`.
+fm-server exposes a small, OpenAI-shaped HTTP surface over Apple's on-device `SystemLanguageModel`. Inference runs in-process through `apple-fm-sdk` — no subprocess backends, no helper binaries, no IPC to `/usr/bin/fm`.
 
 **Endpoints**
 
@@ -43,17 +43,17 @@ Requests with `model: "pcc"` or any other model ID are rejected with `400`.
 ## Install
 
 ```bash
-npm install afm-server
+npm install fm-server
 # or
-pnpm add afm-server
+pnpm add fm-server
 ```
 
 From source:
 
 ```bash
-git clone https://github.com/tariqwest/afm-server.git
+git clone https://github.com/tariqwest/fm-server.git
 git clone https://github.com/tariqwest/ts-apple-fm-sdk.git ../ts-apple-fm-sdk
-cd afm-server
+cd fm-server
 pnpm install && pnpm run build
 ```
 
@@ -61,7 +61,7 @@ Homebrew:
 
 ```bash
 brew tap tariqwest/tap
-brew install afm-server
+brew install fm-server
 ```
 
 ## Quick start
@@ -69,7 +69,7 @@ brew install afm-server
 Embed the server in a Node.js process:
 
 ```typescript
-import { startServer } from "afm-server";
+import { startServer } from "fm-server";
 
 const server = await startServer({
   port: 1337,
@@ -87,7 +87,7 @@ await server.stop();
 Or mount the Hono app in your own HTTP stack:
 
 ```typescript
-import { createApp, InferenceService } from "afm-server";
+import { createApp, InferenceService } from "fm-server";
 
 const inference = InferenceService.create();
 const app = createApp({ inference, token: "sk-apple-1337" });
@@ -158,7 +158,7 @@ curl -X POST http://127.0.0.1:1337/v1/chat/completions \
 | `mcpServers` | `[]` | Stdio MCP servers whose tools are injected when the client sends none |
 | `debug` | no-op | Log callback |
 
-> **Auth note:** `startServer` defaults `token` to `null` (auth off) so embedders opt in explicitly. The `afm-server serve` CLI defaults to `sk-apple-1337` (auth on) and honors the `AFM_SERVER_TOKEN` env var.
+> **Auth note:** `startServer` defaults `token` to `null` (auth off) so embedders opt in explicitly. The `fm-server serve` CLI defaults to `sk-apple-1337` (auth on) and honors the `FM_SERVER_TOKEN` env var.
 
 MCP server spec:
 
@@ -206,7 +206,7 @@ The adapter layer in `src/server/sdk/` maps OpenAI parameters to `GenerationOpti
 ## Project layout
 
 ```
-afm-server/
+fm-server/
 ├── src/server/       HTTP routes, SDK adapter, MCP, validators
 ├── test/             unit and e2e tests
 └── scripts/release.js
@@ -236,7 +236,7 @@ import {
   AfmError,
   ModelAvailability,
   McpStdioClient,
-} from "afm-server";
+} from "fm-server";
 ```
 
 See `src/server/index.ts` for the full export list.
@@ -246,11 +246,11 @@ See `src/server/index.ts` for the full export list.
 The Homebrew formula registers a launchd service that keeps the server running in your login session (required for Apple Intelligence access):
 
 ```bash
-brew services start afm-server
-brew services info afm-server
+brew services start fm-server
+brew services info fm-server
 ```
 
-Logs: `/opt/homebrew/var/log/afm-server.log`
+Logs: `/opt/homebrew/var/log/fm-server.log`
 
 ## License
 
