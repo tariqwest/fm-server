@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "bun:test";
 import { makeContext } from "../../src/server/session/ContextManager.js";
 
 describe("ContextManager.makeContext — basic shapes", () => {

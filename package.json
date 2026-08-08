@@ -1,6 +1,6 @@
 {
   "name": "fm-server",
-  "version": "0.2.0",
+  "version": "0.3.2",
   "description": "Apple Foundation Models for Node.js — OpenAI-compatible HTTP server and CLI for Apple Intelligence.",
   "license": "MIT",
   "author": "Tariq West",
@@ -22,7 +22,8 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=20",
+    "bun": ">=1.0.0"
   },
   "os": [
     "darwin"
@@ -32,9 +33,14 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "vitest run test/e2e",
+    "start": "bun run src/entry.ts",
+    "start:node": "tsx src/entry.ts",
+    "serve:dev": "bun run src/entry.ts serve",
+    "serve:node": "tsx src/entry.ts serve",
+    "test": "bun test --timeout 60000",
+    "test:watch": "bun test --watch --timeout 60000",
+    "test:unit": "bun test test/unit --timeout 60000",
+    "test:e2e": "bun test test/e2e --timeout 60000",
     "typecheck": "tsc --build",
     "clean": "tsc --build --clean && rm -rf dist",
     "format": "biome format --write .",
@@ -42,13 +48,13 @@
     "check": "biome check .",
     "release": "node scripts/release.js",
     "postinstall": "chmod +x node_modules/**/node-pty/prebuilds/darwin-arm64/spawn-helper 2>/dev/null || true",
-    "ci": "pnpm run build && pnpm run test && pnpm run typecheck"
+    "ci": "bun run typecheck && bun test --timeout 60000"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
-    "apple-fm-sdk": "link:../ts-apple-fm-sdk",
+    "javascript-apple-fm-sdk": "link:../javascript-apple-fm-sdk",
     "citty": "^0.1.6",
-    "fm-wrap": "link:../fm-wrap",
+    "fm-access-pcc": "link:../fm-access-PCC",
     "hono": "^4.6.14",
     "node-pty": "^1.1.0",
     "zod": "^3.24.1"
@@ -59,8 +65,8 @@
     "dotenv": "^17.4.2",
     "esbuild": "0.28.1",
     "typescript": "^5.7.2",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.9"
+    "tsx": "^4.23.11",
+    "@types/bun": "^1.3.14"
   },
   "packageManager": "pnpm@9.15.0"
 }

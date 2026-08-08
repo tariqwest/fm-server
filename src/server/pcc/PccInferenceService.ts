@@ -1,11 +1,11 @@
 // ============================================================================
 // PccInferenceService.ts — Adapter for Private Cloud Compute inference via
-// fm-wrap. Wraps fm-wrap's respond() and streaming respond() into the same
+// fm-access-pcc. Wraps fm-access-pcc's respond() and streaming respond() into the same
 // InferenceRespondResult / InferenceStreamEvent shapes used by the on-device
 // InferenceService so that Session and app.ts can treat both backends uniformly.
 // ============================================================================
 
-import { respond as fmRespond } from "fm-wrap";
+import { respond as fmRespond } from "fm-access-pcc";
 import { FinishReason, FinishReasonResolver } from "../chat/FinishReasonResolver.js";
 import type { InferenceRespondResult, InferenceStreamEvent } from "../sdk/InferenceService.js";
 

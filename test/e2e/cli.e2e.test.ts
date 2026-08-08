@@ -1,18 +1,33 @@
-// ============================================================================
+// =============================================================================
 // cli.e2e.test.ts — End-to-end tests for CLI commands
-// ============================================================================
+// =============================================================================
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "bun:test";
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { isNativeAvailable } from "apple-fm-sdk";
+import { isNativeAvailable } from "javascript-apple-fm-sdk";
 
-const MAIN_PATH = join(import.meta.dirname, "../../dist/cli/main.js");
+const ROOT = join(import.meta.dirname, "../..");
+const ENTRY_TS = join(ROOT, "src/entry.ts");
+const MAIN_JS = join(ROOT, "dist/cli/main.js");
 
-async function runCommand(args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
+function resolveRunner(): { command: string; prefixArgs: string[] } {
+  if (existsSync(MAIN_JS)) {
+    return { command: "node", prefixArgs: [MAIN_JS] };
+  }
+  // Uncompiled path: Node via tsx (production-like without tsc emit)
+  return { command: join(ROOT, "node_modules/.bin/tsx"), prefixArgs: [ENTRY_TS] };
+}
+
+async function runCommand(
+  args: string[],
+): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
+  const { command, prefixArgs } = resolveRunner();
   return new Promise((resolve) => {
-    const proc = spawn("node", [MAIN_PATH, ...args], {
+    const proc = spawn(command, [...prefixArgs, ...args], {
       stdio: ["inherit", "pipe", "pipe"],
+      cwd: ROOT,
     });
 
     let stdout = "";

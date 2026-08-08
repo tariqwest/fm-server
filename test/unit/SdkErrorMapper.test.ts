@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "bun:test";
 import {
   GuardrailViolationError,
   RateLimitedError,
   RefusalError,
   GenerationError,
-} from "apple-fm-sdk";
+} from "javascript-apple-fm-sdk";
 import { SdkErrorMapper } from "../../src/server/sdk/SdkErrorMapper.js";
 
 describe("SdkErrorMapper", () => {

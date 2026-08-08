@@ -1,8 +1,8 @@
 // ============================================================================
-// GenerationMapper.ts — Map OpenAI generation params to apple-fm-sdk options.
+// GenerationMapper.ts — Map OpenAI generation params to javascript-apple-fm-sdk options.
 // ============================================================================
 
-import { GenerationOptions, SamplingMode } from "apple-fm-sdk";
+import { GenerationOptions, SamplingMode } from "javascript-apple-fm-sdk";
 
 export interface OpenAIGenerationParams {
   temperature?: number;

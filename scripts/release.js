@@ -5,7 +5,7 @@
 // Bumps the version, builds, bundles, and publishes:
 //   1. Bump version in package.json (auto-detect or explicit)
 //   2. Build the project
-//   3. Bundle prebuilt tarball (with vendored apple-fm-sdk + fm-wrap)
+//   3. Bundle prebuilt tarball (with vendored javascript-apple-fm-sdk + fm-access-pcc)
 //   4. Create GitHub release + upload artifact (via gh CLI)
 //   5. Generate and publish Homebrew formula to tap
 //
@@ -24,8 +24,9 @@
 //   gh auth login   — authenticate the GitHub CLI (used for releases + tap push)
 //
 // Environment variables:
-//   APPLE_FM_SDK_PATH - Path to ts-apple-fm-sdk checkout (default: ../ts-apple-fm-sdk)
-//   FM_WRAP_PATH - Path to fm-wrap checkout (default: ../fm-wrap)
+//   JS_APPLE_FM_SDK_PATH / APPLE_FM_SDK_PATH - Path to javascript-apple-fm-sdk (default: ../javascript-apple-fm-sdk)
+//   FM_ACCESS_PCC_PATH - Path to fm-access-PCC checkout (default: ../fm-access-PCC)
+//   FM_WRAP_PATH - Deprecated alias for FM_ACCESS_PCC_PATH
 //   TAP_REPO - Homebrew tap repository (default: tariqwest/homebrew-tap)
 //   TAP_DIR - Local tap clone directory (default: ~/.cache/fm-server-tap)
 // ============================================================================
@@ -58,9 +59,13 @@ const BUMP_ARG = args.find((a) => !a.startsWith("--"));
 
 const REPO = "tariqwest/fm-server";
 const APPLE_FM_SDK_PATH =
-  process.env.APPLE_FM_SDK_PATH || join(ROOT_DIR, "..", "ts-apple-fm-sdk");
-const FM_WRAP_PATH =
-  process.env.FM_WRAP_PATH || join(ROOT_DIR, "..", "fm-wrap");
+  process.env.JS_APPLE_FM_SDK_PATH ||
+  process.env.APPLE_FM_SDK_PATH ||
+  join(ROOT_DIR, "..", "javascript-apple-fm-sdk");
+const FM_ACCESS_PCC_PATH =
+  process.env.FM_ACCESS_PCC_PATH ||
+  process.env.FM_WRAP_PATH ||
+  join(ROOT_DIR, "..", "fm-access-PCC");
 
 // -- Logging --
 
@@ -99,23 +104,31 @@ function calculateSha256(filePath) {
 function resolveAppleFmSdkPath() {
   if (!existsSync(join(APPLE_FM_SDK_PATH, "package.json"))) {
     throw new Error(
-      `apple-fm-sdk not found at ${APPLE_FM_SDK_PATH}. ` +
-        "Clone https://github.com/tariqwest/ts-apple-fm-sdk alongside fm-server " +
+      `javascript-apple-fm-sdk not found at ${APPLE_FM_SDK_PATH}. ` +
+        "Clone https://github.com/tariqwest/javascript-apple-fm-sdk alongside fm-server " +
         "or set APPLE_FM_SDK_PATH.",
     );
   }
   return APPLE_FM_SDK_PATH;
 }
 
-function resolveFmWrapPath() {
-  if (!existsSync(join(FM_WRAP_PATH, "package.json"))) {
+function resolveFmAccessPccPath() {
+  if (!existsSync(join(FM_ACCESS_PCC_PATH, "package.json"))) {
     throw new Error(
-      `fm-wrap not found at ${FM_WRAP_PATH}. ` +
-        "Clone https://github.com/tariqwest/fm-wrap alongside fm-server " +
-        "or set FM_WRAP_PATH.",
+      `fm-access-pcc not found at ${FM_ACCESS_PCC_PATH}. ` +
+        "Clone https://github.com/tariqwest/fm-access-PCC alongside fm-server " +
+        "or set FM_ACCESS_PCC_PATH.",
     );
   }
-  return FM_WRAP_PATH;
+  return FM_ACCESS_PCC_PATH;
+}
+
+function runPkgScript(cwd, script) {
+  try {
+    exec(`bun run ${script}`, { cwd });
+  } catch {
+    exec(`pnpm run ${script}`, { cwd });
+  }
 }
 
 function ensureAppleFmSdkBuilt(sdkPath) {
@@ -123,17 +136,33 @@ function ensureAppleFmSdkBuilt(sdkPath) {
   const needsJs = !existsSync(join(sdkPath, "dist", "index.js"));
 
   if (!needsNative && !needsJs) return;
-  logStep("Building apple-fm-sdk artifacts...");
-  if (needsNative) exec("pnpm run build:napi", { cwd: sdkPath });
-  if (needsJs) exec("pnpm run build", { cwd: sdkPath });
+  logStep("Building javascript-apple-fm-sdk artifacts...");
+  // javascript-apple-fm-sdk uses bun scripts (build:napi / build).
+  if (needsNative) runPkgScript(sdkPath, "build:napi");
+  if (needsJs) runPkgScript(sdkPath, "build");
+}
+
+function ensureFmAccessPccBuilt(pccPath) {
+  const entry = join(pccPath, "dist", "core", "index.js");
+  if (existsSync(entry)) return;
+  logStep("Building fm-access-pcc artifacts...");
+  runPkgScript(pccPath, "build");
+  if (!existsSync(entry)) {
+    throw new Error(`fm-access-pcc build did not produce ${entry}`);
+  }
+}
+
+function readRootPackage() {
+  return JSON.parse(readFileSync(join(ROOT_DIR, "package.json"), "utf-8"));
 }
 
 // -- Bundle --
 
 function bundlePrebuiltPackage(deployDir, version) {
   const sdkPath = resolveAppleFmSdkPath();
-  const fmWrapPath = resolveFmWrapPath();
+  const fmAccessPccPath = resolveFmAccessPccPath();
   ensureAppleFmSdkBuilt(sdkPath);
+  ensureFmAccessPccBuilt(fmAccessPccPath);
 
   if (existsSync(deployDir)) rmSync(deployDir, { recursive: true, force: true });
   mkdirSync(deployDir, { recursive: true });
@@ -141,29 +170,38 @@ function bundlePrebuiltPackage(deployDir, version) {
   cpSync(join(ROOT_DIR, "dist"), join(deployDir, "dist"), { recursive: true });
   cpSync(join(ROOT_DIR, "bin"), join(deployDir, "bin"), { recursive: true });
 
-  // Vendor apple-fm-sdk (includes native .node binary)
-  const vendorSdkDir = join(deployDir, "vendor", "apple-fm-sdk");
+  // Vendor javascript-apple-fm-sdk (includes native .node binary)
+  const vendorSdkDir = join(deployDir, "vendor", "javascript-apple-fm-sdk");
   mkdirSync(vendorSdkDir, { recursive: true });
   for (const item of ["dist", "build", "package.json"]) {
     cpSync(join(sdkPath, item), join(vendorSdkDir, item), { recursive: true });
   }
 
-  // Vendor fm-wrap (pure JS)
-  const vendorFmWrapDir = join(deployDir, "vendor", "fm-wrap");
-  mkdirSync(vendorFmWrapDir, { recursive: true });
+  // Vendor fm-access-pcc (pure JS library + package metadata)
+  const vendorFmAccessPccDir = join(deployDir, "vendor", "fm-access-pcc");
+  mkdirSync(vendorFmAccessPccDir, { recursive: true });
   for (const item of ["dist", "package.json"]) {
-    cpSync(join(fmWrapPath, item), join(vendorFmWrapDir, item), { recursive: true });
+    cpSync(join(fmAccessPccPath, item), join(vendorFmAccessPccDir, item), { recursive: true });
   }
 
+  // Re-read package.json so the version bump is reflected in the bundle metadata.
+  const rootPkg = readRootPackage();
   const deployPkg = {
-    name: pkg.name,
+    name: rootPkg.name,
     version,
     type: "module",
+    bin: rootPkg.bin,
+    engines: rootPkg.engines,
+    os: rootPkg.os,
+    cpu: rootPkg.cpu,
     dependencies: Object.fromEntries(
-      Object.entries(pkg.dependencies).map(([name, spec]) => [
+      Object.entries(rootPkg.dependencies ?? {}).map(([name, spec]) => [
         name,
-        name === "apple-fm-sdk" ? "file:./vendor/apple-fm-sdk" :
-        name === "fm-wrap" ? "file:./vendor/fm-wrap" : spec,
+        name === "javascript-apple-fm-sdk"
+          ? "file:./vendor/javascript-apple-fm-sdk"
+          : name === "fm-access-pcc"
+            ? "file:./vendor/fm-access-pcc"
+            : spec,
       ]),
     ),
   };
@@ -191,7 +229,7 @@ function generateFormula(version, sha256) {
     depends_on arch: :arm64
   end
 
-  # apple-fm-sdk ships a prebuilt dylib with @rpath install name;
+  # javascript-apple-fm-sdk ships a prebuilt dylib with @rpath install name;
   # prevent Homebrew from rewriting it (which fails due to header size)
   preserve_rpath
 
@@ -343,6 +381,19 @@ function bumpVersion() {
   return version;
 }
 
+function commitAndPushRelease(version) {
+  logStep("Committing and pushing release metadata...");
+  exec("git add package.json pnpm-lock.yaml", { cwd: ROOT_DIR });
+  const staged = execSilent("git diff --cached --quiet", { cwd: ROOT_DIR });
+  // git diff --cached --quiet exits 0 when empty (execSilent returns ""), non-zero when changes (null)
+  if (staged !== null) {
+    logWarn("No package.json changes to commit after version bump");
+    return;
+  }
+  exec(`git commit -m "chore(release): v${version}"`, { cwd: ROOT_DIR });
+  exec("git push origin HEAD", { cwd: ROOT_DIR });
+}
+
 // -- Main --
 
 async function main() {
@@ -353,10 +404,29 @@ async function main() {
 
   if (DRY_RUN) logWarn("DRY RUN mode enabled");
 
+  // Keep package.json in sync with the latest git tag before bumping so
+  // auto bumps do not regress (e.g. 0.2.0 file vs v0.3.2 tag).
+  const latestTag = execSilent("git describe --tags --abbrev=0 2>/dev/null", {
+    cwd: ROOT_DIR,
+  })?.trim();
+  if (latestTag && /^v\d+\.\d+\.\d+/.test(latestTag)) {
+    const tagged = latestTag.replace(/^v/, "");
+    const current = readRootPackage().version;
+    if (current !== tagged && !DRY_RUN) {
+      logWarn(`package.json version ${current} != latest tag ${latestTag}; aligning to ${tagged}`);
+      const rootPkg = readRootPackage();
+      rootPkg.version = tagged;
+      writeFileSync(
+        join(ROOT_DIR, "package.json"),
+        JSON.stringify(rootPkg, null, 2) + "\n",
+      );
+    }
+  }
+
   // 0. Bump version
   let VERSION;
   if (DRY_RUN) {
-    VERSION = pkg.version;
+    VERSION = readRootPackage().version;
     logWarn(`DRY RUN: Skipping bump (using current version ${VERSION})`);
   } else {
     VERSION = bumpVersion();
@@ -366,8 +436,13 @@ async function main() {
 
   // 1. Build
   logStep("Building...");
-  if (!DRY_RUN) exec("pnpm run build", { cwd: ROOT_DIR });
-  else logWarn("DRY RUN: Skipping build");
+  if (!DRY_RUN) {
+    try {
+      exec("bun run build", { cwd: ROOT_DIR });
+    } catch {
+      exec("pnpm run build", { cwd: ROOT_DIR });
+    }
+  } else logWarn("DRY RUN: Skipping build");
 
   // 2. Bundle tarball
   const tempDir = join(ROOT_DIR, ".release-temp");
@@ -390,7 +465,10 @@ async function main() {
   const sha256 = calculateSha256(tarballPath);
   logInfo(`SHA256: ${sha256}`);
 
-  // 3. GitHub release via gh CLI
+  // 3. Commit version bump so the release tag points at matching source
+  if (!DRY_RUN) commitAndPushRelease(VERSION);
+
+  // 4. GitHub release via gh CLI
   const tag = `v${VERSION}`;
   logStep(`Creating GitHub release ${tag}...`);
 
@@ -406,6 +484,11 @@ async function main() {
         "brew install tariqwest/tap/fm-server",
         "```",
         "",
+        "## Highlights",
+        "- On-device backend via `javascript-apple-fm-sdk`",
+        "- PCC backend via `fm-access-pcc`",
+        "- Bun-first tooling with Node/tsx entry (`src/entry.ts`)",
+        "",
         "## Requirements",
         "- macOS 26+ (macOS 27+ for PCC)",
         "- Apple Silicon (M1+)",
@@ -413,7 +496,7 @@ async function main() {
       ].join("\n");
 
       exec(
-        `gh release create ${tag} --repo ${REPO} --title "fm-server ${VERSION}" --notes-file -`,
+        `gh release create ${tag} --repo ${REPO} --target HEAD --title "fm-server ${VERSION}" --notes-file -`,
         { cwd: ROOT_DIR, input: notes },
       );
     }

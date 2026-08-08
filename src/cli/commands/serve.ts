@@ -55,7 +55,7 @@ export const serveCommand = defineCommand({
       debug: debugFn,
     });
 
-    process.stdout.write(`fm-server serving on http://${host}:${port} (backend: apple-fm-sdk)\n`);
+    process.stdout.write(`fm-server serving on http://${host}:${port} (backend: javascript-apple-fm-sdk)\n`);
 
     let stopping = false;
     const shutdown = async (signal: NodeJS.Signals) => {

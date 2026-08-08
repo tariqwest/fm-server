@@ -6,7 +6,7 @@ import {
   isNativeAvailable,
   SystemLanguageModel,
   SystemLanguageModelUnavailableReason,
-} from "apple-fm-sdk";
+} from "javascript-apple-fm-sdk";
 import type { ModelAvailability } from "../backend/ModelAvailability.js";
 
 export class ModelProvider {
@@ -19,7 +19,7 @@ export class ModelProvider {
   static create(): ModelProvider {
     if (!isNativeAvailable()) {
       throw new Error(
-        "apple-fm-sdk native bindings are not available on this platform",
+        "javascript-apple-fm-sdk native bindings are not available on this platform",
       );
     }
     return new ModelProvider(new SystemLanguageModel());

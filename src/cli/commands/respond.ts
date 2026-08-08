@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { defineCommand } from "citty";
-import { respond as fmRespond } from "fm-wrap";
+import { respond as fmRespond } from "fm-access-pcc";
 import { ModelBackend, Session } from "../../server/index.js";
 import { createInference } from "../inference.js";
 
@@ -57,7 +57,7 @@ export const respondCommand = defineCommand({
 
     const modelBackend = ModelBackend.fromModelName(String(args.model));
 
-    // PCC: route through fm-wrap directly
+    // PCC: route through fm-access-pcc directly
     if (modelBackend === "privateCloudCompute") {
       await respondPcc(promptText, args);
       return;

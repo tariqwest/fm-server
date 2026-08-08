@@ -11,8 +11,8 @@ Guide for AI agents working in this repository.
 
 Two inference backends:
 
-- **`system`** (on-device) — runs in-process via [`apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk)
-- **`pcc`** (Private Cloud Compute) — wraps the macOS `fm` CLI via [`fm-wrap`](https://github.com/tariqwest/fm-wrap)
+- **`system`** (on-device) — runs in-process via [`javascript-apple-fm-sdk`](https://github.com/tariqwest/javascript-apple-fm-sdk)
+- **`pcc`** (Private Cloud Compute) — wraps the macOS `fm` CLI / `fm serve` via [`fm-access-pcc`](https://github.com/tariqwest/fm-access-PCC)
 
 - **Repo:** https://github.com/tariqwest/fm-server
 - **Package name:** `fm-server` (version in `package.json`)
@@ -28,8 +28,8 @@ src/server/
     app.ts        Hono routes: /health, /v1/models, /v1/chat/completions
     server.ts     @hono/node-server bootstrap (startServer)
     session/      Backend-dispatching session wrapper
-    sdk/          apple-fm-sdk adapter (InferenceService, ModelProvider, …)
-    pcc/          fm-wrap adapter (PccInferenceService)
+    sdk/          javascript-apple-fm-sdk adapter (InferenceService, ModelProvider, …)
+    pcc/          fm-access-pcc adapter (PccInferenceService)
     mcp/          stdio MCP tool injection
     validators/   Request validation (model acceptance, unsupported params)
     errors/       AfmError taxonomy → OpenAI wire format
@@ -44,23 +44,23 @@ HTTP request
   → Session.open(inference, backend, instructions)
        ├─ onDevice:
        │    → InferenceService.respond() | .stream()
-       │    → apple-fm-sdk LanguageModelSession
+       │    → javascript-apple-fm-sdk LanguageModelSession
        └─ privateCloudCompute:
             → PccInferenceService.respond() | .stream()
-            → fm-wrap → /usr/bin/fm CLI
+            → fm-access-pcc → fm serve / /usr/bin/fm CLI
   → Session.close()
 ```
 
 ### Session strategy
 
 - **HTTP:** one session per `/v1/chat/completions` request (both backends)
-- **CLI `chat`:** on-device reuses a single `LanguageModelSession` across REPL turns; PCC uses `fm-wrap`'s `createChatSession()` (PTY-based `fm chat`)
+- **CLI `chat`:** on-device reuses a single `LanguageModelSession` across REPL turns; PCC uses `fm-access-pcc`'s `createChatSession()`
 - Multi-turn HTTP history is folded into text by `ContextManager` (Transcript API not yet wired)
 
 ### Streaming
 
-- **On-device:** `apple-fm-sdk` `streamResponse()` yields cumulative snapshots. `InferenceService.stream()` converts to deltas via `snapshot.slice(prev.length)` before emitting SSE chunks.
-- **PCC:** `fm-wrap`'s `respond()` with `stream: true` yields incremental text chunks directly.
+- **On-device:** `javascript-apple-fm-sdk` `streamResponse()` yields cumulative snapshots. `InferenceService.stream()` converts to deltas via `snapshot.slice(prev.length)` before emitting SSE chunks.
+- **PCC:** `fm-access-pcc`'s `respond()` with `stream: true` yields incremental text chunks directly.
 
 ## Directory map
 
@@ -70,8 +70,8 @@ HTTP request
 | `src/server/server.ts` | `startServer()`, MCP client wiring, shutdown |
 | `src/server/index.ts` | Public exports (also `package.json` main) |
 | `src/server/version.ts` | Package version (single source of truth from `package.json`) |
-| `src/server/sdk/` | On-device SDK adapter layer (apple-fm-sdk) |
-| `src/server/pcc/PccInferenceService.ts` | PCC adapter (fm-wrap) |
+| `src/server/sdk/` | On-device SDK adapter layer (javascript-apple-fm-sdk) |
+| `src/server/pcc/PccInferenceService.ts` | PCC adapter (fm-access-pcc) |
 | `src/server/session/Session.ts` | Backend-dispatching session wrapper |
 | `src/server/session/ContextManager.ts` | Message folding → instructions + prompt |
 | `src/server/validators/ChatRequestValidator.ts` | Model/param validation |
@@ -79,6 +79,7 @@ HTTP request
 | `src/cli/main.ts` | CLI entry (citty subcommands) |
 | `src/cli/commands/` | Individual CLI commands |
 | `src/cli/inference.ts` | `createInference()` helper for CLI |
+| `src/entry.ts` | Bun/tsx CLI entry (no compile) |
 | `bin/fm-server.js` | Bin shim → `dist/cli/main.js` |
 | `test/unit/` | Vitest unit tests |
 | `test/e2e/` | Live CLI/server tests (require native SDK) |
@@ -111,16 +112,16 @@ CLI commands import from `../../server/index.js` (relative), not from the packag
 ## Commands
 
 ```bash
-pnpm install          # requires ../ts-apple-fm-sdk and ../fm-wrap
+pnpm install          # requires ../javascript-apple-fm-sdk and ../fm-access-PCC
 pnpm run build        # tsc → dist/
-pnpm test             # vitest (unit + e2e)
-pnpm run test:e2e     # e2e only
+bun test              # bun:test (unit + e2e)
+bun run test:e2e      # e2e only
 pnpm run typecheck
-pnpm run ci           # build + test + typecheck
+bun run ci            # typecheck + bun test
 pnpm run release      # GitHub release + Homebrew tap (needs GITHUB_TOKEN)
 ```
 
-E2E tests call `isNativeAvailable()` from `apple-fm-sdk` and skip when bindings are missing.
+E2E tests call `isNativeAvailable()` from `javascript-apple-fm-sdk` and skip when bindings are missing.
 
 ## Conventions
 

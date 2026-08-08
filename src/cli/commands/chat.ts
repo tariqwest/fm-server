@@ -5,7 +5,7 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { defineCommand } from "citty";
-import { createChatSession } from "fm-wrap";
+import { createChatSession } from "fm-access-pcc";
 import { ModelBackend, Session } from "../../server/index.js";
 import { createInference } from "../inference.js";
 
@@ -30,7 +30,7 @@ export const chatCommand = defineCommand({
 
     const modelBackend = ModelBackend.fromModelName(String(args.model));
 
-    // PCC: use fm-wrap's chat session (PTY-based fm chat)
+    // PCC: use fm-access-pcc's chat session
     if (modelBackend === "privateCloudCompute") {
       await chatPcc(args.instructions as string | undefined);
       return;

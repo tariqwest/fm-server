@@ -1,8 +1,8 @@
 // ============================================================================
-// InferenceService.ts — In-process apple-fm-sdk adapter for chat inference.
+// InferenceService.ts — In-process javascript-apple-fm-sdk adapter for chat inference.
 // ============================================================================
 
-import { LanguageModelSession } from "apple-fm-sdk";
+import { LanguageModelSession } from "javascript-apple-fm-sdk";
 import { FinishReason, FinishReasonResolver } from "../chat/FinishReasonResolver.js";
 import { AfmError } from "../errors/AfmError.js";
 import type { ModelBackend } from "../backend/ModelBackend.js";

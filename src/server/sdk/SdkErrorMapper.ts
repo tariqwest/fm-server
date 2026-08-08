@@ -1,5 +1,5 @@
 // ============================================================================
-// SdkErrorMapper.ts — Map apple-fm-sdk errors to typed AfmError variants.
+// SdkErrorMapper.ts — Map javascript-apple-fm-sdk errors to typed AfmError variants.
 // ============================================================================
 
 import {
@@ -14,7 +14,7 @@ import {
   ToolCallError,
   UnsupportedGuideError,
   UnsupportedLanguageOrLocaleError,
-} from "apple-fm-sdk";
+} from "javascript-apple-fm-sdk";
 import type { AfmError } from "../errors/AfmError.js";
 
 export const SdkErrorMapper = {

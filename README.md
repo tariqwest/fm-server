@@ -6,8 +6,8 @@ OpenAI-compatible HTTP server for Apple Foundation Models on macOS. Drop it into
 
 fm-server exposes a small, OpenAI-shaped HTTP surface over Apple's Foundation Models:
 
-- **`system`** — On-device `SystemLanguageModel` via [`apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk) (in-process FFI)
-- **`pcc`** — Private Cloud Compute `PrivateCloudComputeLanguageModel` via [`fm-wrap`](https://github.com/tariqwest/fm-wrap) (wraps the macOS `fm` CLI)
+- **`system`** — On-device `SystemLanguageModel` via [`javascript-apple-fm-sdk`](https://github.com/tariqwest/javascript-apple-fm-sdk) (in-process FFI)
+- **`pcc`** — Private Cloud Compute `PrivateCloudComputeLanguageModel` via [`fm-access-pcc`](https://github.com/tariqwest/fm-access-PCC) (wraps the macOS `fm` CLI / `fm serve`)
 
 **Endpoints**
 
@@ -34,13 +34,32 @@ fm-server exposes a small, OpenAI-shaped HTTP surface over Apple's Foundation Mo
 
 Requests with any other model ID are rejected with `400`.
 
+## When to use what
+
+fm-server sits between the in-process TypeScript SDK and Swift-first tooling. Pick the layer that matches the job:
+
+| Need | Use |
+|------|-----|
+| Call Foundation Models from Node/TS in-process (sessions, tools, guided generation, token APIs) | [`javascript-apple-fm-sdk`](https://github.com/tariqwest/javascript-apple-fm-sdk) |
+| OpenAI-compatible HTTP for existing clients, Homebrew service, MCP tool injection, `system` + `pcc` in one process | **This package (`fm-server`)** |
+| PCC-only library access or Terminal-hosted `fm serve` without the full OpenAI server | [`fm-access-pcc`](https://github.com/tariqwest/fm-access-PCC) (also the PCC backend under fm-server) |
+| Swift CLI, adapters, or a browser workbench UI | [`afm`](https://github.com/rudrankriyam/Foundation-Models-Framework-CLI) (`afm serve`, `afm serve --ui`) |
+
+**Guidance**
+
+- Prefer **fm-server** when you want drop-in OpenAI client compatibility on macOS without embedding the SDK yourself.
+- Prefer the **SDK** when you own the process and want the lowest-latency on-device path and full session/tool APIs.
+- Prefer **fm-access-pcc** when you only need PCC (or system via `fm`) as a library and will host your own HTTP surface—or when debugging the serve-socket path used by fm-server's `pcc` model.
+- Prefer **afm** for Swift-native workflows and UI; fm-server does not reimplement `afm serve --ui`. Point advanced UI users there rather than expecting a workbench in this repo.
+- On-device **adapters** and Foundation Lab–style bridges belong in the Swift/`afm` world until `foundation-models-c` exposes them; do not expect them from fm-server's N-API path. **PCC** in fm-server goes through `fm-access-pcc` (CLI/`fm serve`), not C FFI.
+
 ## Requirements
 
 - macOS 26 (Tahoe) or later (macOS 27+ for PCC)
 - Apple Silicon (M1+)
 - Apple Intelligence enabled in System Settings
 - Node.js 20+
-- For local development: sibling checkouts of [`ts-apple-fm-sdk`](https://github.com/tariqwest/ts-apple-fm-sdk) and [`fm-wrap`](https://github.com/tariqwest/fm-wrap)
+- For local development: sibling checkouts of [`javascript-apple-fm-sdk`](https://github.com/tariqwest/javascript-apple-fm-sdk) and [`fm-access-PCC`](https://github.com/tariqwest/fm-access-PCC)
 
 ## Install
 
@@ -54,8 +73,8 @@ From source:
 
 ```bash
 git clone https://github.com/tariqwest/fm-server.git
-git clone https://github.com/tariqwest/ts-apple-fm-sdk.git ../ts-apple-fm-sdk
-git clone https://github.com/tariqwest/fm-wrap.git ../fm-wrap
+git clone https://github.com/tariqwest/javascript-apple-fm-sdk.git ../javascript-apple-fm-sdk
+git clone https://github.com/tariqwest/fm-access-PCC.git ../fm-access-PCC
 cd fm-server
 pnpm install && pnpm run build
 ```
@@ -205,17 +224,17 @@ HTTP client
        → Session.open(backend)
             ├─ onDevice:
             │    → InferenceService
-            │         → apple-fm-sdk (in-process FFI)
+            │         → javascript-apple-fm-sdk (in-process FFI)
             │              → SystemLanguageModel
             └─ privateCloudCompute:
                  → PccInferenceService
-                      → fm-wrap → /usr/bin/fm CLI
+                      → fm-access-pcc → fm serve / /usr/bin/fm CLI
                            → PrivateCloudComputeLanguageModel
 ```
 
 The adapter layer in `src/server/sdk/` maps OpenAI parameters to `GenerationOptions`, SDK errors to `AfmError`, and streaming snapshots to SSE deltas (on-device path).
 
-The PCC adapter in `src/server/pcc/` wraps `fm-wrap`'s `respond()` function, converting its output to the same `InferenceRespondResult`/`InferenceStreamEvent` shapes.
+The PCC adapter in `src/server/pcc/` wraps `fm-access-pcc`'s `respond()` function, converting its output to the same `InferenceRespondResult`/`InferenceStreamEvent` shapes.
 
 | Module | Role |
 |--------|------|
@@ -223,15 +242,15 @@ The PCC adapter in `src/server/pcc/` wraps `fm-wrap`'s `respond()` function, con
 | `GenerationMapper` | OpenAI params → `GenerationOptions` |
 | `SdkErrorMapper` | SDK errors → `AfmError` |
 | `InferenceService` | On-device: open, respond, stream, shutdown |
-| `PccInferenceService` | PCC: respond, stream (via fm-wrap) |
+| `PccInferenceService` | PCC: respond, stream (via fm-access-pcc) |
 
 ## Project layout
 
 ```
 fm-server/
 ├── src/server/       HTTP routes, SDK adapter, PCC adapter, MCP, validators
-│   ├── sdk/          On-device inference (apple-fm-sdk)
-│   ├── pcc/          PCC inference (fm-wrap)
+│   ├── sdk/          On-device inference (javascript-apple-fm-sdk)
+│   ├── pcc/          PCC inference (fm-access-pcc)
 │   ├── session/      Backend-dispatching session wrapper
 │   └── ...
 ├── test/             unit and e2e tests
@@ -240,14 +259,19 @@ fm-server/
 
 ## Development
 
+Bun is the primary runtime for scripts and tests. Node works via **tsx** without a compile step; published packages still ship compiled `dist/` for plain Node.
+
 ```bash
 pnpm install
-pnpm run build
-pnpm test
-pnpm run typecheck
+bun run start -- --help          # CLI via Bun (TypeScript source)
+bun run start:node -- --help     # CLI via Node + tsx (no tsc)
+bun run serve:dev                # serve from TypeScript
+bun test                         # bun:test
+bun run typecheck                # tsc --build (also emits dist/)
+bun run build                    # same as typecheck with composite project
 ```
 
-E2E tests require native `apple-fm-sdk` bindings and are skipped automatically when unavailable.
+E2E tests require native `javascript-apple-fm-sdk` bindings and are skipped automatically when unavailable. They prefer `dist/cli/main.js` when present, otherwise spawn `tsx src/entry.ts`.
 
 ## Public API
 

@@ -1,10 +1,10 @@
 // ============================================================================
 // Session.ts — Per-request session wrapper. Dispatches to either the on-device
-// InferenceService (apple-fm-sdk) or PccInferenceService (fm-wrap) based on
+// InferenceService (javascript-apple-fm-sdk) or PccInferenceService (fm-access-pcc) based on
 // the requested ModelBackend.
 // ============================================================================
 
-import type { LanguageModelSession } from "apple-fm-sdk";
+import type { LanguageModelSession } from "javascript-apple-fm-sdk";
 import { AfmError } from "../errors/AfmError.js";
 import type { ModelBackend } from "../backend/ModelBackend.js";
 import {
@@ -36,8 +36,8 @@ export class Session {
     instructions?: string,
   ): Session {
     if (backend === "privateCloudCompute") {
-      // PCC sessions don't use the apple-fm-sdk LanguageModelSession.
-      // fm-wrap drives the fm CLI subprocess per-call.
+      // PCC sessions don't use the javascript-apple-fm-sdk LanguageModelSession.
+      // fm-access-pcc drives fm serve / fm CLI per-call.
       return new Session(null, null, backend, instructions);
     }
 

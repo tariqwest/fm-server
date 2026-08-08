@@ -25,7 +25,7 @@ A single script (`scripts/release.js`) handles the entire release:
 
 1. Bumps the version in `package.json` (skipped during `--dry-run`)
 2. Builds the project (`pnpm run build`)
-3. Bundles prebuilt tarball with vendored apple-fm-sdk + fm-wrap
+3. Bundles prebuilt tarball with vendored javascript-apple-fm-sdk + fm-access-pcc
 4. Creates GitHub release + uploads artifact (via `gh` CLI)
 5. Generates and publishes Homebrew formula to tap
 
@@ -66,8 +66,9 @@ Skips bumping, building, uploading, and tap publishing. Uses the current version
 
 ## Environment Variables
 
-- `APPLE_FM_SDK_PATH` — Path to ts-apple-fm-sdk (default: `../ts-apple-fm-sdk`)
-- `FM_WRAP_PATH` — Path to fm-wrap (default: `../fm-wrap`)
+- `JS_APPLE_FM_SDK_PATH` or `APPLE_FM_SDK_PATH` — Path to javascript-apple-fm-sdk (default: `../javascript-apple-fm-sdk`)
+- `FM_ACCESS_PCC_PATH` — Path to fm-access-PCC (default: `../fm-access-PCC`)
+- `FM_WRAP_PATH` — Deprecated alias for `FM_ACCESS_PCC_PATH`
 - `TAP_REPO` — Homebrew tap repository (default: `tariqwest/homebrew-tap`)
 - `TAP_DIR` — Local tap clone directory (default: `~/.cache/fm-server-tap`)
 

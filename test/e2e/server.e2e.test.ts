@@ -2,10 +2,10 @@
 // server.e2e.test.ts — End-to-end tests against live server instance
 // ============================================================================
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { spawn } from "node:child_process";
 import { join } from "node:path";
-import { isNativeAvailable } from "apple-fm-sdk";
+import { isNativeAvailable } from "javascript-apple-fm-sdk";
 
 const SERVER_PORT = 19999;
 const SERVER_URL = `http://localhost:${SERVER_PORT}`;
@@ -31,19 +31,31 @@ async function waitForServer(url: string, timeoutMs = 15000): Promise<void> {
 
 const describeE2E = isNativeAvailable() ? describe : describe.skip;
 
-describeE2E("E2E: fm-server serve (built app)", () => {
+describeE2E("E2E: fm-server serve", () => {
   let serverProcess: ReturnType<typeof spawn> | null = null;
 
   beforeAll(async () => {
-    const mainPath = join(import.meta.dirname, "../../dist/cli/main.js");
+    const root = join(import.meta.dirname, "../..");
+    const mainJs = join(root, "dist/cli/main.js");
+    const entryTs = join(root, "src/entry.ts");
     const { existsSync } = await import("node:fs");
-    if (!existsSync(mainPath)) {
-      throw new Error(`Built application not found at ${mainPath}. Run 'pnpm build' first.`);
+
+    let command: string;
+    let args: string[];
+    if (existsSync(mainJs)) {
+      command = "node";
+      args = [mainJs, "serve", "--port", String(SERVER_PORT), "--token", SERVER_TOKEN];
+    } else if (existsSync(entryTs)) {
+      // Uncompiled path via tsx — no tsc emit required
+      command = join(root, "node_modules/.bin/tsx");
+      args = [entryTs, "serve", "--port", String(SERVER_PORT), "--token", SERVER_TOKEN];
+    } else {
+      throw new Error("Neither dist/cli/main.js nor src/entry.ts found");
     }
 
-    const args = [mainPath, "serve", "--port", String(SERVER_PORT), "--token", SERVER_TOKEN];
-    serverProcess = spawn("node", args, {
+    serverProcess = spawn(command, args, {
       stdio: ["inherit", "pipe", "pipe"],
+      cwd: root,
     });
 
     let serverOutput = "";

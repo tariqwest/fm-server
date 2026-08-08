@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { SamplingModeType } from "apple-fm-sdk";
+import { describe, it, expect } from "bun:test";
+import { SamplingModeType } from "javascript-apple-fm-sdk";
 import { toGenerationOptions } from "../../src/server/sdk/GenerationMapper.js";
 
 describe("GenerationMapper", () => {

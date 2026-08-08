@@ -22,7 +22,7 @@ import { VERSION } from "./version.js";
 export interface AppConfig {
   /** Bearer token clients must present. Set to null/undefined to disable auth. */
   token?: string | null;
-  /** In-process apple-fm-sdk inference service. */
+  /** In-process javascript-apple-fm-sdk inference service. */
   inference: InferenceService;
   /** Optional set of MCP servers whose tools are injected when the client sent none. */
   mcpClients?: McpStdioClient[];
@@ -94,7 +94,7 @@ export function createApp(config: AppConfig): Hono {
           supported_parameters: sharedParams,
           unsupported_parameters: unsupported,
           notes:
-            "Apple on-device model via apple-fm-sdk (FoundationModels). " +
+            "Apple on-device model via javascript-apple-fm-sdk (FoundationModels). " +
             "Unsupported parameters are rejected with 400 when present (except n=1 and logprobs=false).",
         },
         {
@@ -106,7 +106,7 @@ export function createApp(config: AppConfig): Hono {
           supported_parameters: sharedParams,
           unsupported_parameters: unsupported,
           notes:
-            "Apple Private Cloud Compute model via fm CLI (fm-wrap). " +
+            "Apple Private Cloud Compute model via fm CLI (fm-access-pcc). " +
             "Runs inference on Apple's private cloud infrastructure.",
         },
       ],
