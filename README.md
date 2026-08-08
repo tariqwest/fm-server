@@ -53,6 +53,62 @@ fm-server sits between the in-process TypeScript SDK and Swift-first tooling. Pi
 - Prefer **afm** for Swift-native workflows and UI; fm-server does not reimplement `afm serve --ui`. Point advanced UI users there rather than expecting a workbench in this repo.
 - On-device **adapters** and Foundation Lab–style bridges belong in the Swift/`afm` world until `foundation-models-c` exposes them; do not expect them from fm-server's N-API path. **PCC** in fm-server goes through `fm-access-pcc` (CLI/`fm serve`), not C FFI.
 
+## Related projects
+
+fm-server is one layer in a small Foundation Models ecosystem. Rough relationship:
+
+```text
+apple/python-apple-fm-sdk (+ foundation-models-c)     ← upstream / parent ABI & API shape
+        │
+        ▼
+javascript-apple-fm-sdk                              ← sibling: on-device TS/JS SDK (N-API)
+        │
+        ├──────────────────────┐
+        ▼                      ▼
+   fm-server  ◄──── fm-access-pcc                    ← siblings: OpenAI HTTP+CLI vs PCC/fm lib
+        │
+        ▼
+   Homebrew tap / embedding apps                     ← downstream consumers of this package
+
+overlap / inspiration (not dependencies):
+  afm (Swift CLI + serve + UI)
+  fm-acp (ACP stdio adapter over fm serve / afm / system)
+  apple-on-device-ai (earlier Node bindings + Vercel AI SDK patterns)
+```
+
+### Parent / upstream
+
+| Project | Role relative to fm-server |
+|---------|----------------------------|
+| [apple/python-apple-fm-sdk](https://github.com/apple/python-apple-fm-sdk) | **Parent upstream** for on-device semantics. Official Python bindings and in-tree `foundation-models-c`; the TS SDK aims at parity with this surface. fm-server does not depend on it directly. |
+| Apple Foundation Models / Apple Intelligence | Platform parent: on-device `SystemLanguageModel` and PCC capability on supported macOS. |
+
+### Siblings (same author stack)
+
+| Project | Role relative to fm-server |
+|---------|----------------------------|
+| [javascript-apple-fm-sdk](https://github.com/tariqwest/javascript-apple-fm-sdk) | **Sibling dependency** — in-process on-device SDK (`system` backend). Pinned via GitHub release tarball. |
+| [fm-access-PCC](https://github.com/tariqwest/fm-access-PCC) (`fm-access-pcc`) | **Sibling dependency** — library for `fm` / Terminal-hosted `fm serve`, including PCC. Powers the `pcc` backend. Pinned via GitHub release tarball. |
+| [fm-acp](https://github.com/tariqwest/fm-acp) | **Sibling product** — ACP stdio adapter over Apple FM paths (`fm serve`, afm, system). Overlaps in “make FM usable from agents,” but different protocol (ACP vs OpenAI HTTP). Not a runtime dependency of fm-server. |
+
+### This package and downstream
+
+| Project | Role |
+|---------|------|
+| **fm-server** (this repo) | OpenAI-compatible HTTP server + CLI composing the on-device SDK and `fm-access-pcc`. |
+| [tariqwest/homebrew-tap](https://github.com/tariqwest/homebrew-tap) | **Downstream distribution** — `fm-server` formula and launchd service. |
+| Apps / agents using `baseURL` → `…/v1` | **Downstream consumers** — any OpenAI-compatible client pointed at fm-server. |
+
+There is no separate “child library” extracted from this repo; the public npm-style surface *is* `fm-server` (`startServer`, `createApp`, CLI).
+
+### Overlapping / inspiration (external)
+
+| Project | Relationship |
+|---------|----------------|
+| [afm](https://github.com/rudrankriyam/Foundation-Models-Framework-CLI) (Foundation-Models-Framework-CLI) | **Primary product overlap** — Swift CLI, OpenAI-compatible `afm serve`, schema/tool UX, browser workbench (`serve --ui`), adapters/bridge direction. Inspiration for serve/CLI shape; fm-server is the JS-native counterpart for HTTP + Homebrew, not a reimplementation of the workbench or Swift bridge. |
+| [apple-on-device-ai](https://github.com/Meridius-Labs/apple-on-device-ai) | **Inspiration / prior art** — earlier Node bindings and Vercel AI SDK provider patterns. Useful design reference; not an upstream ABI we track (prefer Apple `foundation-models-c` via `javascript-apple-fm-sdk`). |
+| macOS `/usr/bin/fm` | System CLI used by `fm-access-pcc` (and thus fm-server `pcc`); not a separate open-source project. |
+
 ## Requirements
 
 - macOS 26 (Tahoe) or later (macOS 27+ for PCC)
