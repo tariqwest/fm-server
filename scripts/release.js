@@ -24,8 +24,10 @@
 //   gh auth login   — authenticate the GitHub CLI (used for releases + tap push)
 //
 // Environment variables:
-//   JS_APPLE_FM_SDK_PATH / APPLE_FM_SDK_PATH - Path to javascript-apple-fm-sdk (default: ../javascript-apple-fm-sdk)
-//   FM_ACCESS_PCC_PATH - Path to fm-access-PCC checkout (default: ../fm-access-PCC)
+//   JS_APPLE_FM_SDK_PATH / APPLE_FM_SDK_PATH - Optional override path to javascript-apple-fm-sdk
+//     (default: node_modules/javascript-apple-fm-sdk, then ../javascript-apple-fm-sdk)
+//   FM_ACCESS_PCC_PATH - Optional override path to fm-access-PCC
+//     (default: node_modules/fm-access-pcc, then ../fm-access-PCC)
 //   FM_WRAP_PATH - Deprecated alias for FM_ACCESS_PCC_PATH
 //   TAP_REPO - Homebrew tap repository (default: tariqwest/homebrew-tap)
 //   TAP_DIR - Local tap clone directory (default: ~/.cache/fm-server-tap)
@@ -58,14 +60,28 @@ const DRY_RUN = args.includes("--dry-run");
 const BUMP_ARG = args.find((a) => !a.startsWith("--"));
 
 const REPO = "tariqwest/fm-server";
+function firstExistingPackageDir(candidates) {
+  for (const dir of candidates) {
+    if (existsSync(join(dir, "package.json"))) return dir;
+  }
+  return candidates[candidates.length - 1];
+}
+
+// Prefer installed deps (github-pinned), then sibling checkouts for local overrides.
 const APPLE_FM_SDK_PATH =
   process.env.JS_APPLE_FM_SDK_PATH ||
   process.env.APPLE_FM_SDK_PATH ||
-  join(ROOT_DIR, "..", "javascript-apple-fm-sdk");
+  firstExistingPackageDir([
+    join(ROOT_DIR, "node_modules", "javascript-apple-fm-sdk"),
+    join(ROOT_DIR, "..", "javascript-apple-fm-sdk"),
+  ]);
 const FM_ACCESS_PCC_PATH =
   process.env.FM_ACCESS_PCC_PATH ||
   process.env.FM_WRAP_PATH ||
-  join(ROOT_DIR, "..", "fm-access-PCC");
+  firstExistingPackageDir([
+    join(ROOT_DIR, "node_modules", "fm-access-pcc"),
+    join(ROOT_DIR, "..", "fm-access-PCC"),
+  ]);
 
 // -- Logging --
 
@@ -105,8 +121,8 @@ function resolveAppleFmSdkPath() {
   if (!existsSync(join(APPLE_FM_SDK_PATH, "package.json"))) {
     throw new Error(
       `javascript-apple-fm-sdk not found at ${APPLE_FM_SDK_PATH}. ` +
-        "Clone https://github.com/tariqwest/javascript-apple-fm-sdk alongside fm-server " +
-        "or set APPLE_FM_SDK_PATH.",
+        "Run pnpm install (https://github.com/tariqwest/javascript-apple-fm-sdk/releases/download/v0.1.0/javascript-apple-fm-sdk-0.1.0.tgz) " +
+        "or set JS_APPLE_FM_SDK_PATH / APPLE_FM_SDK_PATH.",
     );
   }
   return APPLE_FM_SDK_PATH;
@@ -116,7 +132,7 @@ function resolveFmAccessPccPath() {
   if (!existsSync(join(FM_ACCESS_PCC_PATH, "package.json"))) {
     throw new Error(
       `fm-access-pcc not found at ${FM_ACCESS_PCC_PATH}. ` +
-        "Clone https://github.com/tariqwest/fm-access-PCC alongside fm-server " +
+        "Run pnpm install (https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz) " +
         "or set FM_ACCESS_PCC_PATH.",
     );
   }

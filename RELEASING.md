@@ -66,8 +66,8 @@ Skips bumping, building, uploading, and tap publishing. Uses the current version
 
 ## Environment Variables
 
-- `JS_APPLE_FM_SDK_PATH` or `APPLE_FM_SDK_PATH` — Path to javascript-apple-fm-sdk (default: `../javascript-apple-fm-sdk`)
-- `FM_ACCESS_PCC_PATH` — Path to fm-access-PCC (default: `../fm-access-PCC`)
+- `JS_APPLE_FM_SDK_PATH` or `APPLE_FM_SDK_PATH` — Optional override for javascript-apple-fm-sdk (default: `node_modules/javascript-apple-fm-sdk`, then `../javascript-apple-fm-sdk`)
+- `FM_ACCESS_PCC_PATH` — Optional override for fm-access-PCC (default: `node_modules/fm-access-pcc`, then `../fm-access-PCC`)
 - `FM_WRAP_PATH` — Deprecated alias for `FM_ACCESS_PCC_PATH`
 - `TAP_REPO` — Homebrew tap repository (default: `tariqwest/homebrew-tap`)
 - `TAP_DIR` — Local tap clone directory (default: `~/.cache/fm-server-tap`)

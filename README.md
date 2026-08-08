@@ -59,7 +59,7 @@ fm-server sits between the in-process TypeScript SDK and Swift-first tooling. Pi
 - Apple Silicon (M1+)
 - Apple Intelligence enabled in System Settings
 - Node.js 20+
-- For local development: sibling checkouts of [`javascript-apple-fm-sdk`](https://github.com/tariqwest/javascript-apple-fm-sdk) and [`fm-access-PCC`](https://github.com/tariqwest/fm-access-PCC)
+- Dependencies are pinned to GitHub **release tarballs** (`javascript-apple-fm-sdk@v0.1.0`, `fm-access-pcc@v0.2.0`)
 
 ## Install
 
@@ -73,11 +73,14 @@ From source:
 
 ```bash
 git clone https://github.com/tariqwest/fm-server.git
-git clone https://github.com/tariqwest/javascript-apple-fm-sdk.git ../javascript-apple-fm-sdk
-git clone https://github.com/tariqwest/fm-access-PCC.git ../fm-access-PCC
 cd fm-server
-pnpm install && pnpm run build
+pnpm install   # pulls https://github.com/tariqwest/javascript-apple-fm-sdk/releases/download/v0.1.0/javascript-apple-fm-sdk-0.1.0.tgz
+               # and https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz
+pnpm run build
 ```
+
+Optional local overrides (sibling checkouts) still work if you point package.json
+back to `link:../…` or set `JS_APPLE_FM_SDK_PATH` / `FM_ACCESS_PCC_PATH` for release packaging.
 
 Homebrew:
 

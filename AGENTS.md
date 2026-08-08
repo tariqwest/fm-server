@@ -109,10 +109,19 @@ import {
 
 CLI commands import from `../../server/index.js` (relative), not from the package name.
 
+## Pinned sibling dependencies
+
+| Package | Spec |
+|---------|------|
+| `javascript-apple-fm-sdk` | `https://github.com/tariqwest/javascript-apple-fm-sdk/releases/download/v0.1.0/javascript-apple-fm-sdk-0.1.0.tgz` |
+| `fm-access-pcc` | `https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz` |
+
+Release packaging vendors from `node_modules` (or optional path overrides).
+
 ## Commands
 
 ```bash
-pnpm install          # requires ../javascript-apple-fm-sdk and ../fm-access-PCC
+pnpm install          # installs pinned GH release tarballs (sdk v0.1.0, fm-access-pcc v0.2.0)
 pnpm run build        # tsc → dist/
 bun test              # bun:test (unit + e2e)
 bun run test:e2e      # e2e only
