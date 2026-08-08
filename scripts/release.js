@@ -409,7 +409,11 @@ async function main() {
   const latestTag = execSilent("git describe --tags --abbrev=0 2>/dev/null", {
     cwd: ROOT_DIR,
   })?.trim();
-  if (latestTag && /^v\d+\.\d+\.\d+/.test(latestTag)) {
+  if (
+    !process.env.RELEASE_VERSION &&
+    latestTag &&
+    /^v\d+\.\d+\.\d+/.test(latestTag)
+  ) {
     const tagged = latestTag.replace(/^v/, "");
     const current = readRootPackage().version;
     if (current !== tagged && !DRY_RUN) {
@@ -423,9 +427,12 @@ async function main() {
     }
   }
 
-  // 0. Bump version
+  // 0. Bump version (or use RELEASE_VERSION / explicit already-bumped package.json)
   let VERSION;
-  if (DRY_RUN) {
+  if (process.env.RELEASE_VERSION) {
+    VERSION = process.env.RELEASE_VERSION.replace(/^v/, "");
+    logInfo(`Using RELEASE_VERSION=${VERSION}`);
+  } else if (DRY_RUN) {
     VERSION = readRootPackage().version;
     logWarn(`DRY RUN: Skipping bump (using current version ${VERSION})`);
   } else {
@@ -496,7 +503,7 @@ async function main() {
       ].join("\n");
 
       exec(
-        `gh release create ${tag} --repo ${REPO} --target HEAD --title "fm-server ${VERSION}" --notes-file -`,
+        `gh release create ${tag} --repo ${REPO} --target main --title "fm-server ${VERSION}" --notes-file -`,
         { cwd: ROOT_DIR, input: notes },
       );
     }
