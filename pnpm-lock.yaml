@@ -15,8 +15,8 @@ importers:
         specifier: ^0.1.6
         version: 0.1.6
       fm-access-pcc:
-        specifier: https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz
-        version: https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz
+        specifier: https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.1/fm-access-pcc-0.2.1.tgz
+        version: https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.1/fm-access-pcc-0.2.1.tgz
       hono:
         specifier: ^4.6.14
         version: 4.12.25
@@ -340,9 +340,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  fm-access-pcc@https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz:
-    resolution: {tarball: https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz}
-    version: 0.2.0
+  fm-access-pcc@https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.1/fm-access-pcc-0.2.1.tgz:
+    resolution: {tarball: https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.1/fm-access-pcc-0.2.1.tgz}
+    version: 0.2.1
     engines: {bun: '>=1.0.0'}
     os: [darwin]
 
@@ -609,7 +609,7 @@ snapshots:
       '@esbuild/win32-ia32': 0.28.1
       '@esbuild/win32-x64': 0.28.1
 
-  fm-access-pcc@https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz:
+  fm-access-pcc@https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.1/fm-access-pcc-0.2.1.tgz:
     dependencies:
       hono: 4.13.1
       uuid: 14.0.1

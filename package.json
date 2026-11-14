@@ -57,7 +57,7 @@
     "node-pty": "^1.1.0",
     "zod": "^3.24.1",
     "javascript-apple-fm-sdk": "https://github.com/tariqwest/javascript-apple-fm-sdk/releases/download/v0.1.0/javascript-apple-fm-sdk-0.1.0.tgz",
-    "fm-access-pcc": "https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz"
+    "fm-access-pcc": "https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.1/fm-access-pcc-0.2.1.tgz"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
