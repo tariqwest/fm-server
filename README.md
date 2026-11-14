@@ -7,7 +7,7 @@ OpenAI-compatible HTTP server for Apple Foundation Models on macOS. Drop it into
 fm-server exposes a small, OpenAI-shaped HTTP surface over Apple's Foundation Models:
 
 - **`system`** — On-device `SystemLanguageModel` via [`javascript-apple-fm-sdk`](https://github.com/tariqwest/javascript-apple-fm-sdk) (in-process FFI)
-- **`pcc`** — Private Cloud Compute `PrivateCloudComputeLanguageModel` via [`fm-access-pcc`](https://github.com/tariqwest/fm-access-PCC) (wraps the macOS `fm` CLI / `fm serve`)
+- **`pcc`** — Private Cloud Compute `PrivateCloudComputeLanguageModel` via [`fm-access-pcc`](https://github.com/tariqwest/fm-access-pcc) (wraps the macOS `fm` CLI / `fm serve`)
 
 **Endpoints**
 
@@ -42,7 +42,7 @@ fm-server sits between the in-process TypeScript SDK and Swift-first tooling. Pi
 |------|-----|
 | Call Foundation Models from Node/TS in-process (sessions, tools, guided generation, token APIs) | [`javascript-apple-fm-sdk`](https://github.com/tariqwest/javascript-apple-fm-sdk) |
 | OpenAI-compatible HTTP for existing clients, Homebrew service, MCP tool injection, `system` + `pcc` in one process | **This package (`fm-server`)** |
-| PCC-only library access or Terminal-hosted `fm serve` without the full OpenAI server | [`fm-access-pcc`](https://github.com/tariqwest/fm-access-PCC) (also the PCC backend under fm-server) |
+| PCC-only library access or Terminal-hosted `fm serve` without the full OpenAI server | [`fm-access-pcc`](https://github.com/tariqwest/fm-access-pcc) (also the PCC backend under fm-server) |
 | Swift CLI, adapters, or a browser workbench UI | [`afm`](https://github.com/rudrankriyam/Foundation-Models-Framework-CLI) (`afm serve`, `afm serve --ui`) |
 
 **Guidance**
@@ -88,7 +88,7 @@ overlap / inspiration (not dependencies):
 | Project | Role relative to fm-server |
 |---------|----------------------------|
 | [javascript-apple-fm-sdk](https://github.com/tariqwest/javascript-apple-fm-sdk) | **Sibling dependency** — in-process on-device SDK (`system` backend). Pinned via GitHub release tarball. |
-| [fm-access-PCC](https://github.com/tariqwest/fm-access-PCC) (`fm-access-pcc`) | **Sibling dependency** — library for `fm` / Terminal-hosted `fm serve`, including PCC. Powers the `pcc` backend. Pinned via GitHub release tarball. |
+| [fm-access-pcc](https://github.com/tariqwest/fm-access-pcc) (`fm-access-pcc`) | **Sibling dependency** — library for `fm` / Terminal-hosted `fm serve`, including PCC. Powers the `pcc` backend. Pinned via GitHub release tarball. |
 | [fm-acp](https://github.com/tariqwest/fm-acp) | **Sibling product** — ACP stdio adapter over Apple FM paths (`fm serve`, afm, system). Overlaps in “make FM usable from agents,” but different protocol (ACP vs OpenAI HTTP). Not a runtime dependency of fm-server. |
 
 ### This package and downstream
@@ -131,7 +131,7 @@ From source:
 git clone https://github.com/tariqwest/fm-server.git
 cd fm-server
 pnpm install   # pulls https://github.com/tariqwest/javascript-apple-fm-sdk/releases/download/v0.1.0/javascript-apple-fm-sdk-0.1.0.tgz
-               # and https://github.com/tariqwest/fm-access-PCC/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz
+               # and https://github.com/tariqwest/fm-access-pcc/releases/download/v0.2.0/fm-access-pcc-0.2.0.tgz
 pnpm run build
 ```
 
